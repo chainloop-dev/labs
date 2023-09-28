@@ -50,11 +50,13 @@ jobs:
       - name: Chainloop Attestation Status
         run: |
           chainloop attestation status --full &> c8-status.txt
+          cat c8-status.txt
  
       - name: Validate Collected Artifacts and Record Attestation
         if: ${{ success() }}
         run: |
           chainloop attestation push --key env://CHAINLOOP_SIGNING_KEY &> c8-push.txt
+          cat c8-push.txt
         env:
           CHAINLOOP_SIGNING_KEY: ${{ secrets.signing_key }}
           CHAINLOOP_SIGNING_PASSWORD: ${{ secrets.signing_key_password }}
