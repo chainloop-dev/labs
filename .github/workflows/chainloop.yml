@@ -6,7 +6,7 @@ on:
         required: false
         type: string
     secrets:
-      token:
+      api_token:
         required: true
       signing_key:
         required: true
@@ -80,5 +80,5 @@ jobs:
 
     env:
       CHAINLOOP_VERSION: ${{ inputs.chainloop_version }}
-      CHAINLOOP_ROBOT_ACCOUNT: ${{ secrets.token }}
+      CHAINLOOP_ROBOT_ACCOUNT: ${{ secrets.api_token }}
       
