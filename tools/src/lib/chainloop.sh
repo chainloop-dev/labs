@@ -269,3 +269,13 @@ chainloop_generate_github_summary() {
   cat c8-status.txt >> $GITHUB_STEP_SUMMARY
   echo "\`\`\`" >> $GITHUB_STEP_SUMMARY 
 }
+
+chainloop_collect_logs_for_github_jobs() {
+  # requires GH_TOKEN github.token 
+  # https://docs.github.com/en/rest/actions/workflow-jobs?apiVersion=2022-11-28#download-job-logs-for-a-workflow-run
+  mkdir -p reports/gh_logs
+  gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs > reports/gh_logs/jobs.json
+  for j in `cat reports/gh_logs/jobs.json | jq '.jobs[].id'` ; do
+    gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${GITHUB_REPOSITORY}/actions/jobs/${j}/logs > reports/gh_logs/${j}.log
+  done
+}
