@@ -32,35 +32,36 @@ jobs:
       - name: Install Chainloop CLI, Labs and Cosign
         run: |
           bash -c "$(curl -fsSL https://raw.githubusercontent.com/chainloop-dev/labs/dev/tools/src/lib/chainloop.sh) ; install_chainloop_labs dev"
-          . ~/chainloop.sh && install_chainloop_cli_and_cosign
+          . ~/chainloop.sh
+          install_chainloop_cli_and_cosign
 
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v3
 
       - name: Initialize Attestation
-        run: . ~/chainloop.sh && chainloop_attestation_init
+        run: chainloop_attestation_init
 
       - name: Add all artifacts, reports, and metadata to attestation.
-        run: ~/chainloop.sh && chainloop_attestation_add_from_yaml
+        run: chainloop_attestation_add_from_yaml
  
       - name: Chainloop Attestation Status
-        run: ~/chainloop.sh && chainloop_attestation_status
+        run: chainloop_attestation_status
  
       - name: Validate Collected Artifacts and Record Attestation
         if: ${{ success() }}
-        run: ~/chainloop.sh && chainloop_attestation_push
+        run: chainloop_attestation_push
         env:
           CHAINLOOP_SIGNING_KEY: ${{ secrets.signing_key }}
           CHAINLOOP_SIGNING_PASSWORD: ${{ secrets.signing_key_password }}
   
       - name: Generate a summary report
-        run: ~/chainloop.sh && chainloop_generate_github_summary
+        run: . ~/chainloop.sh && chainloop_generate_github_summary
 
       - name: Mark attestation as failed
         if: ${{ failure() }}
         run: |
           chainloop attestation reset
-          ~/chainloop.sh && chainloop_generate_github_summary_on_failure
+          . ~/chainloop.sh && chainloop_generate_github_summary_on_failure
           
       - name: Mark attestation as cancelled
         if: ${{ cancelled() }}

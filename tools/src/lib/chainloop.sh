@@ -358,11 +358,13 @@ chainloop_adapter_run() {
 }
 
 chainloop_attestation_add_from_yaml() {
+  log "Adding Metadata files based on .chainloop.yml to attestation"
   script=`cat .chainloop.yml | yq eval '.attestation[] | "chainloop attestation add --name "  + .name + " --value " + .path + "; "'`
   eval $script
 }
 
 chainloop_attestation_init() {
+  log "Initializing Chainloop Attestation"
   if [ -z "${CHAINLOOP_CONTRACT_REVISION+x}" ]; then
     chainloop attestation init -f
   else
@@ -371,16 +373,19 @@ chainloop_attestation_init() {
 }
 
 chainloop_attestation_status() {
+  log "Checking Attestation Status"
   chainloop attestation status --full &> c8-status.txt
   cat c8-status.txt
 }
 
 chainloop_attestation_push() {
+  log "Pushing Attestation"
   chainloop attestation push --key env://CHAINLOOP_SIGNING_KEY &> c8-push.txt
   cat c8-push.txt
 }
 
 chainloop_generate_github_summary() {
+  log "Generating GitHub Summary"
   digest=`cat c8-push.txt| grep " Digest: " | awk -F\  '{print $3}'`
   echo -e "## Great job!\nYou are making SecOps and Compliance teams really happy. Keep up the good work!\n" >> $GITHUB_STEP_SUMMARY
   echo "**[Chainloop Trust Report](https://app.chainloop.dev/attestation/${digest})**" >> $GITHUB_STEP_SUMMARY 
@@ -390,6 +395,7 @@ chainloop_generate_github_summary() {
 }
 
 chainloop_generate_github_summary_on_failure() {
+  log "Generating GitHub Summary on Failure"
   echo "\`\`\`" >> $GITHUB_STEP_SUMMARY 
   if [ -f c8-push.txt ]; then
     cat c8-push.txt >> $GITHUB_STEP_SUMMARY
@@ -401,6 +407,7 @@ chainloop_generate_github_summary_on_failure() {
 }
 
 chainloop_collect_logs_for_github_jobs() {
+  log "Collecting logs for GitHub Jobs"
   # requires GH_TOKEN github.token 
   # https://docs.github.com/en/rest/actions/workflow-jobs?apiVersion=2022-11-28#download-job-logs-for-a-workflow-run
   mkdir -p reports/gh_logs
@@ -411,6 +418,7 @@ chainloop_collect_logs_for_github_jobs() {
 }
 
 install_chainloop_labs_cli() {
+  log "Installing Chainloop Labs CLI"
   mkdir -p reports
   branch=${1:-main}
   sudo curl -sfL https://raw.githubusercontent.com/chainloop-dev/labs/${branch}/tools/c8l -o /usr/local/bin/c8l
@@ -422,6 +430,7 @@ install_chainloop_labs_cli() {
 }
 
 install_labs_helpers() {
+  log "Installing Chainloop Labs Helpers"
   branch=${1:-main}
   curl -sfL https://raw.githubusercontent.com/chainloop-dev/labs/${branch}/tools/src/lib/chainloop.sh -o ~/chainloop.sh
   if [ $? -ne 0 ]; then
@@ -431,6 +440,7 @@ install_labs_helpers() {
 }
 
 install_chainloop_labs() {
+  logs "Installing Chainloop Labs"
   branch=${1:-main}
   install_chainloop_labs_cli ${branch}
   install_labs_helpers ${branch}
