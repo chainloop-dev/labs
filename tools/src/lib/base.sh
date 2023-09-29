@@ -1,23 +1,3 @@
-is_chainloop_in_path() {
-  if command -v chainloop &> /dev/null; then
-    # we are good
-    return 0
-  else
-    log "chainloop is not in PATH, install it."
-    return 1
-  fi
-}
-
-validate_env() {
-    if [ ! is_chainloop_in_path ] ; then
-        exit 1
-    fi
-}
-
-l() {
-  yellow "$*"
-}
-
 data_path=/tmp/chainloop/data
 mkdir -p "$data_path"
 
@@ -28,7 +8,6 @@ store_attestation_uuid() {
     mkdir -p "${data_path}/$sha256"
     echo "$uuid $name" >> "${data_path}/$sha256/uuids.txt"
 }
-
 
 get_attestations_uuids() {
     sha256="$1"

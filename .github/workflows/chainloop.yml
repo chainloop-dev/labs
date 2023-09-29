@@ -33,18 +33,12 @@ jobs:
   
       - name: Install Chainloop Labs Functions
         run: |
-          sudo curl -L https://raw.githubusercontent.com/chainloop-dev/labs/dev/tools/c8l -o /usr/local/bin/c8l
-          sudo chmod +x /usr/local/bin/c8l
-          curl -L https://raw.githubusercontent.com/chainloop-dev/labs/dev/tools/src/lib/chainloop.sh -o ~/chainloop.sh
-
+          bash -c "$(curl -fsSL https://raw.githubusercontent.com/chainloop-dev/labs/dev/tools/src/lib/chainloop.sh)" && install_chainloop_labs dev
+    
       - name: Install Chainloop CLI
         run: |
-          if [ -n "${CHAINLOOP_VERSION}" ]; then
-             curl -sfL https://docs.chainloop.dev/install.sh | bash -s -- --version v${CHAINLOOP_VERSION}
-          else
-            curl -sfL https://docs.chainloop.dev/install.sh | bash -s
-          fi
-          
+          . ~/chainloop.sh && install_chainloop_cli_and_cosign
+
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v3
 

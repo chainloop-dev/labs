@@ -1,3 +1,66 @@
+## Usage:
+## Use any of the functions below to color or format a portion of a string.
+##
+##   echo "before $(red this is red) after"
+##   echo "before $(green_bold this is green_bold) after"
+##
+## Color output will be disabled if `NO_COLOR` environment variable is set
+## in compliance with https://no-color.org/
+##
+print_in_color() {
+  local color="$1"
+  shift
+  if [[ -z ${NO_COLOR+x} ]]; then
+    printf "$color%b\e[0m\n" "$*"
+  else
+    printf "%b\n" "$*"
+  fi
+}
+
+red() { print_in_color "\e[31m" "$*"; }
+green() { print_in_color "\e[32m" "$*"; }
+yellow() { print_in_color "\e[33m" "$*"; }
+blue() { print_in_color "\e[34m" "$*"; }
+magenta() { print_in_color "\e[35m" "$*"; }
+cyan() { print_in_color "\e[36m" "$*"; }
+bold() { print_in_color "\e[1m" "$*"; }
+underlined() { print_in_color "\e[4m" "$*"; }
+red_bold() { print_in_color "\e[1;31m" "$*"; }
+green_bold() { print_in_color "\e[1;32m" "$*"; }
+yellow_bold() { print_in_color "\e[1;33m" "$*"; }
+blue_bold() { print_in_color "\e[1;34m" "$*"; }
+magenta_bold() { print_in_color "\e[1;35m" "$*"; }
+cyan_bold() { print_in_color "\e[1;36m" "$*"; }
+red_underlined() { print_in_color "\e[4;31m" "$*"; }
+green_underlined() { print_in_color "\e[4;32m" "$*"; }
+yellow_underlined() { print_in_color "\e[4;33m" "$*"; }
+blue_underlined() { print_in_color "\e[4;34m" "$*"; }
+magenta_underlined() { print_in_color "\e[4;35m" "$*"; }
+cyan_underlined() { print_in_color "\e[4;36m" "$*"; }
+
+###
+
+is_chainloop_in_path() {
+  if command -v chainloop &> /dev/null; then
+    # we are good
+    return 0
+  else
+    log "chainloop is not in PATH, install it."
+    return 1
+  fi
+}
+
+validate_env() {
+    if [ ! is_chainloop_in_path ] ; then
+        exit 1
+    fi
+}
+
+l() {
+  yellow "$*"
+}
+
+###
 # helpers
 t=$(date "+%Y%m%d%H%M%S")
 script_dir="$(cd "$(dirname "$0")" && pwd)"
@@ -33,22 +96,9 @@ validate_chainloop_required_env_vars() {
   fi
 }
 
-install_chainloop_tools() {
-  log_header "Installing Chainloop Tools"
-  export PATH=/usr/local/bin:$PATH
+###
 
-  if [ -f /usr/local/bin/chainloop ]; then
-    log "Skipping... Chainloop Tools already installed"
-    return 0
-  fi
-
-  curl -sL https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64 -o /usr/local/bin/cosign
-  if [ $? -ne 0 ]; then
-    log_error "Cosign installation failed"
-    return 1
-  fi
-  chmod +x /usr/local/bin/cosign
-
+install_chainloop_cli() {
   log "Installing Chainloop CLI"
   if [ -n "${CHAINLOOP_VERSION}" ]; then
     curl -sfL https://docs.chainloop.dev/install.sh | bash -s -- --version v${CHAINLOOP_VERSION}
@@ -59,17 +109,43 @@ install_chainloop_tools() {
     log_error "Chainloop installation failed"
     return 1
   fi
+}
 
-  log "Installing Syft, Oras, Cosign, and jq"
+install_cosign() {
+  log "Installing Cosign"
+  curl -sL https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64 -o /usr/local/bin/cosign
+  if [ $? -ne 0 ]; then
+    log_error "Cosign installation failed"
+    return 1
+  fi
+  chmod +x /usr/local/bin/cosign
+}
 
+install_chainloop_cli_and_cosign() {
+  install_cosign
+  install_chainloop_cli
+}
+
+install_syft() {
+  log "Installing Syft"
   curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
   if [ $? -ne 0 ]; then
     log_error "Syft installation failed"
     return 1
   fi
+}
 
+install_semgrep() {
+  log "Installing Semgrep"
   python3 -m pip install semgrep
-  
+  if [ $? -ne 0 ]; then
+    log_error "Semgrep installation failed"
+    return 1
+  fi
+}
+
+install_oras() {
+  log "Installing Oras"
   VERSION="1.0.0"
   curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
   mkdir -p oras-install/
@@ -81,24 +157,39 @@ install_chainloop_tools() {
     log_error "Oras installation failed"
     return 1
   fi
+}
 
-  sudo apt-get install jq ruby -y
+install_jq() {
+  log "Installing jq"
+  sudo apt-get install jq -y
   if [ $? -ne 0 ]; then
     log_error "jq installation failed"
     return 1
   fi
+}
 
+install_ruby_restclient() {
+  log "Installing Ruby rest-client"
   sudo gem install rest-client
+  if [ $? -ne 0 ]; then
+    log_error "rest-client installation failed"
+    return 1
+  fi
+}
 
+install_yq() {
+  log "Installing yq"
   sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
-  sudo chmod a+x /usr/local/bin/yq
   if [ $? -ne 0 ]; then
     log_error "yq installation failed"
     return 1
   fi
+  sudo chmod a+x /usr/local/bin/yq
+}
 
+install_parlay() {
   log "Installing Parlay"
-  wget https://github.com/snyk/parlay/releases/download/v0.2.0/parlay_Linux_x86_64.tar.gz
+  wget https://github.com/snyk/parlay/releases/latest/download/parlay_Linux_x86_64.tar.gz
   tar -xvf parlay_Linux_x86_64.tar.gz
   sudo mv parlay /usr/local/bin/
   rm parlay_Linux_x86_64.tar.gz
@@ -113,6 +204,26 @@ spdx2cyclonedx() {
     return 1
   fi
 }
+
+install_chainloop_tools() {
+  log_header "Installing Chainloop Tools"
+  export PATH=/usr/local/bin:$PATH
+
+  if [ -f /usr/local/bin/chainloop ]; then
+    log "Skipping... Chainloop Tools already installed"
+    return 0
+  fi
+
+  install_chainloop_cli_and_cosign
+  install_syft
+  install_semgrep
+  install_oras
+  install_jq
+  install_yq
+  install_parlay
+}
+
+###
 
 process_metadata() {
   log "Preparing metadata for $artifact"
@@ -312,7 +423,7 @@ install_chainloop_labs_cli() {
 
 install_labs_helpers() {
   branch=${1:-main}
-  curl -sfL https://raw.githubusercontent.com/chainloop-dev/labs/dev/tools/src/lib/chainloop.sh -o ~/chainloop.sh
+  curl -sfL https://raw.githubusercontent.com/chainloop-dev/labs/${branch}/tools/src/lib/chainloop.sh -o ~/chainloop.sh
   if [ $? -ne 0 ]; then
     log_error "Failed to install labs helpers"
     return 1
