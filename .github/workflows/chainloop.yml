@@ -74,6 +74,13 @@ jobs:
         if: ${{ failure() }}
         run: |
           chainloop attestation reset
+          if [ -f c8-push.txt ]; then
+            cat c8-push.txt >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -f c8-status.txt ]; then
+            cat c8-status.txt >> $GITHUB_STEP_SUMMARY
+          fi
+          
 
       - name: Mark attestation as cancelled
         if: ${{ cancelled() }}

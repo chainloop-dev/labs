@@ -35,6 +35,7 @@ commands:
   - name: generate-github-summary
     alias: ggs
     help: "[ggs] Generate a summary of the attestation for GitHub Action."
+
   - name: get-attestations
     alias: ga
     help: "[ga] Get all attestations for artifact"
