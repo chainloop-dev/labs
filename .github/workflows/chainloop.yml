@@ -39,17 +39,17 @@ jobs:
         uses: actions/download-artifact@v3
 
       - name: Initialize Attestation
-        run: chainloop_attestation_init
+        run: . ~/chainloop.sh && chainloop_attestation_init
 
       - name: Add all artifacts, reports, and metadata to attestation.
-        run: chainloop_attestation_add_from_yaml
+        run: . ~/chainloop.sh && chainloop_attestation_add_from_yaml
  
       - name: Chainloop Attestation Status
-        run: chainloop_attestation_status
+        run: . ~/chainloop.sh && chainloop_attestation_status
  
       - name: Validate Collected Artifacts and Record Attestation
         if: ${{ success() }}
-        run: chainloop_attestation_push
+        run: . ~/chainloop.sh && chainloop_attestation_push
         env:
           CHAINLOOP_SIGNING_KEY: ${{ secrets.signing_key }}
           CHAINLOOP_SIGNING_PASSWORD: ${{ secrets.signing_key_password }}
