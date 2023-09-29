@@ -5,6 +5,9 @@ on:
       chainloop_version:
         required: false
         type: string
+      contract_revision:
+        required: false
+        type: string
     secrets:
       api_token:
         required: true
@@ -27,7 +30,13 @@ jobs:
             .chainloop.yml
 
       - uses: sigstore/cosign-installer@v3.1.1
-      
+  
+      - name: Install Chainloop Labs Functions
+        run: |
+          sudo curl -L https://raw.githubusercontent.com/chainloop-dev/labs/dev/tools/c8l -o /usr/local/bin/c8l
+          sudo chmod +x /usr/local/bin/c8l
+          curl -L https://raw.githubusercontent.com/chainloop-dev/labs/dev/tools/src/lib/chainloop.sh -o ~/chainloop.sh
+
       - name: Install Chainloop CLI
         run: |
           if [ -n "${CHAINLOOP_VERSION}" ]; then
@@ -38,9 +47,9 @@ jobs:
           
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v3
-      
+
       - name: Initialize Attestation
-        run: chainloop attestation init # --contract-revision 2
+        run: . ~/chainloop.sh && chainloop_attestation_init
 
       - name: Add all artifacts, reports, and metadata to attestation.
         run: |
@@ -81,7 +90,6 @@ jobs:
             cat c8-status.txt >> $GITHUB_STEP_SUMMARY
           fi
           
-
       - name: Mark attestation as cancelled
         if: ${{ cancelled() }}
         run: |
@@ -90,4 +98,5 @@ jobs:
     env:
       CHAINLOOP_VERSION: ${{ inputs.chainloop_version }}
       CHAINLOOP_ROBOT_ACCOUNT: ${{ secrets.api_token }}
+      CHAINLOOP_CONTRACT_REVISION: ${{ inputs.contract_revision }}
       

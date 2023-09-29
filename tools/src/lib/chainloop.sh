@@ -251,6 +251,14 @@ chainloop_attestation_add_from_yaml() {
   eval $script
 }
 
+chainloop_attestation_init() {
+  if [ -z "${CHAINLOOP_CONTRACT_REVISION+x}" ]; then
+    chainloop attestation init -f
+  else
+    chainloop attestation init -f --contract-revision ${CHAINLOOP_CONTRACT_REVISION}
+  fi
+}
+
 chainloop_attestation_status() {
   chainloop attestation status --full &> c8-status.txt
   cat c8-status.txt
