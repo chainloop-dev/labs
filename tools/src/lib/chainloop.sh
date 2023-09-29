@@ -278,6 +278,17 @@ chainloop_generate_github_summary() {
   echo "\`\`\`" >> $GITHUB_STEP_SUMMARY 
 }
 
+chainloop_generate_github_summary_on_failure() {
+  echo "\`\`\`" >> $GITHUB_STEP_SUMMARY 
+  if [ -f c8-push.txt ]; then
+    cat c8-push.txt >> $GITHUB_STEP_SUMMARY
+  fi
+  if [ -f c8-status.txt ]; then
+    cat c8-status.txt >> $GITHUB_STEP_SUMMARY
+  fi
+  echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+}
+
 chainloop_collect_logs_for_github_jobs() {
   # requires GH_TOKEN github.token 
   # https://docs.github.com/en/rest/actions/workflow-jobs?apiVersion=2022-11-28#download-job-logs-for-a-workflow-run
@@ -286,4 +297,30 @@ chainloop_collect_logs_for_github_jobs() {
   for j in `cat reports/gh_logs/jobs.json | jq '.jobs[].id'` ; do
     gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${GITHUB_REPOSITORY}/actions/jobs/${j}/logs > reports/gh_logs/${j}.log
   done
+}
+
+install_chainloop_labs_cli() {
+  mkdir -p reports
+  branch=${1:-main}
+  sudo curl -sfL https://raw.githubusercontent.com/chainloop-dev/labs/${branch}/tools/c8l -o /usr/local/bin/c8l
+  if [ $? -ne 0 ]; then
+    log_error "Failed to install labs CLI"
+    return 1
+  fi
+  sudo chmod +x /usr/local/bin/c8l
+}
+
+install_labs_helpers() {
+  branch=${1:-main}
+  curl -sfL https://raw.githubusercontent.com/chainloop-dev/labs/dev/tools/src/lib/chainloop.sh -o ~/chainloop.sh
+  if [ $? -ne 0 ]; then
+    log_error "Failed to install labs helpers"
+    return 1
+  fi
+}
+
+install_chainloop_labs() {
+  branch=${1:-main}
+  install_chainloop_labs_cli ${branch}
+  install_labs_helpers ${branch}
 }
