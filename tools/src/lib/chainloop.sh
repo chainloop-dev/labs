@@ -398,10 +398,10 @@ chainloop_generate_github_summary_on_failure() {
   log "Generating GitHub Summary on Failure"
   echo "\`\`\`" >> $GITHUB_STEP_SUMMARY 
   if [ -f c8-push.txt ]; then
-    cat c8-push.txt >> $GITHUB_STEP_SUMMARY
+    cat c8-push.txt | sed -r "s/[[:cntrl:]]\[[0-9]{1,3}m//g" >> $GITHUB_STEP_SUMMARY
   fi
   if [ -f c8-status.txt ]; then
-    cat c8-status.txt >> $GITHUB_STEP_SUMMARY
+    cat c8-status.txt | sed -r "s/[[:cntrl:]]\[[0-9]{1,3}m//g" >> $GITHUB_STEP_SUMMARY
   fi
   echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 }
