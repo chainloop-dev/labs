@@ -1,0 +1,2 @@
+validate_env
+install_chainloop_tools

@@ -1,0 +1,2 @@
+validate_env
+chainloop_attestation_add_from_yaml

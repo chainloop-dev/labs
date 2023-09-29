@@ -1,0 +1,83 @@
+name: c8l
+help: "[EXPERIMENTAL] Chainloop (c8) Labs CLI"
+version: 0.3.0
+
+commands:
+- name: help
+  alias: h
+  help: Show help about a command
+
+- name: inspect
+  alias: i
+  help: "[i] Inspect."
+
+- name: cli
+  alias: c
+  help: Chainloop CLI UX improved
+
+  commands:
+  - name: install-tools
+    alias: it
+    help: "[it] Install Chainloop CLI and all required tools"
+
+  - name: attestation-add-from-yaml
+    alias: aafy
+    help: "[aafy] Add to the current atestation based on the yaml file."
+
+  - name: attestation-status
+    alias: as
+    help: "[as] Get the status of the current attestation."
+
+  - name: attestation-push
+    alias: ap
+    help: "[ap] Push the current attestation to the Chainloop server."
+
+  - name: generate-github-summary
+    alias: ggs
+    help: "[ggs] Generate a summary of the attestation for GitHub Action."
+  - name: get-attestations
+    alias: ga
+    help: "[ga] Get all attestations for artifact"
+    args:
+    - name: sha
+      required: false
+      help: SHA256 of the artifact.
+
+  - name: get
+    alias: g
+    help: "[g] Get artifact from Chainloop"
+    args:
+    - name: sha
+      required: false
+      help: SHA256 of the artifact to get.
+    examples:
+    - cl g 01430ba1c938528a13cea49cd62862c4820e3edc6fc92a9ac5a7f007ea5478ba
+
+  - name: workflow-get
+    alias: wg
+    help: "[wg] Get workflow from Chainloop."
+    args:
+    - name: uuid
+      required: false
+      help: UUID of the workflow to get.
+    examples:
+    - cl wg be52251b-0d8a-4719-bc20-16a586555ea4
+
+  - name: workflow-list
+    alias: wl
+    help: "[wl] List workflows from Chainloop."
+
+  - name: workflow-run-get
+    alias: wrg
+    help: "[wrg] Get workflow run from Chainloop."
+    args:
+    - name: uuid
+      required: false
+      help: UUID of the workflow run to get.
+    examples:
+    - cl wrg be52251b-0d8a-4719-bc20-16a586555ea4
+
+  - name: workflow-run-list
+    alias: wrl
+    help: "[wrl] List workflow runs from Chainloop."
+
