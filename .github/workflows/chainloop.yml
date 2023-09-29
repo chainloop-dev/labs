@@ -33,8 +33,8 @@ jobs:
   
       - name: Install Chainloop Labs Functions
         run: |
-          bash -c "$(curl -fsSL https://raw.githubusercontent.com/chainloop-dev/labs/dev/tools/src/lib/chainloop.sh)" && install_chainloop_labs dev
-    
+          bash -c "$(curl -fsSL https://raw.githubusercontent.com/chainloop-dev/labs/dev/tools/src/lib/chainloop.sh) ; install_chainloop_labs dev"
+
       - name: Install Chainloop CLI
         run: |
           . ~/chainloop.sh && install_chainloop_cli_and_cosign
