@@ -410,12 +410,12 @@ chainloop_generate_github_summary() {
 
 chainloop_generate_github_summary_on_failure() {
   log "Generating GitHub Summary on Failure"
-  echo -e "## Chainloop Attestation Failed\nWe could not successfully complete the Chainloop attestation process because probably some SecOps and Compliance requirements were not met:
+  echo "## Chainloop Attestation Failed\nWe could not successfully complete the Chainloop attestation process because probably some SecOps and Compliance requirements were not met:
 " >> $GITHUB_STEP_SUMMARY
   if [ -f c8-push.txt ]; then
-    echo -e "> [!WARNING]\n" >> $GITHUB_STEP_SUMMARY
+    echo "\n> [!WARNING]\n" >> $GITHUB_STEP_SUMMARY
     cat c8-push.txt | sed -r "s/[[:cntrl:]]\[[0-9]{1,3}m//g" | sed 's/^/> /' >> $GITHUB_STEP_SUMMARY
-    echo "**" >> $GITHUB_STEP_SUMMARY
+    echo "\n" >> $GITHUB_STEP_SUMMARY
   fi
   if [ -f c8-status.txt ]; then
     cat c8-status.txt | sed -r "s/[[:cntrl:]]\[[0-9]{1,3}m//g" >> $GITHUB_STEP_SUMMARY
@@ -427,16 +427,16 @@ chainloop_collect_logs_for_github_jobs() {
   log "Collecting logs for GitHub Jobs"
   # requires GH_TOKEN github.token 
   # https://docs.github.com/en/rest/actions/workflow-jobs?apiVersion=2022-11-28#download-job-logs-for-a-workflow-run
-  mkdir -p reports/gh_logs
-  gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs > reports/gh_logs/jobs.json
-  for j in `cat reports/gh_logs/jobs.json | jq '.jobs[].id'` ; do
-    gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${GITHUB_REPOSITORY}/actions/jobs/${j}/logs > reports/gh_logs/${j}.log
+  mkdir -p metadata/gh_logs
+  gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs > metadata/gh_logs/jobs.json
+  for j in `cat metadata/gh_logs/jobs.json | jq '.jobs[].id'` ; do
+    gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${GITHUB_REPOSITORY}/actions/jobs/${j}/logs > metadata/gh_logs/${j}.log
   done
 }
 
 install_chainloop_labs_cli() {
   log "Installing Chainloop Labs CLI"
-  mkdir -p reports
+  mkdir -p metadata
   branch=${1:-main}
   sudo curl -sfL https://raw.githubusercontent.com/chainloop-dev/labs/${branch}/tools/c8l -o /usr/local/bin/c8l
   if [ $? -ne 0 ]; then
