@@ -374,14 +374,28 @@ chainloop_attestation_init() {
 
 chainloop_attestation_status() {
   log "Checking Attestation Status"
-  chainloop attestation status --full &> c8-status.txt
-  cat c8-status.txt
+  if chainloop attestation status --full &> c8-status.txt ; then
+    log "Attestation Status Process Completed Successfully"
+    cat c8-status.txt
+  else
+    exit_code=$?
+    log_error "Attestation Status Process Failed"
+    cat c8-status.txt
+    return $exit_code
+  fi
 }
 
 chainloop_attestation_push() {
   log "Pushing Attestation"
-  chainloop attestation push --key env://CHAINLOOP_SIGNING_KEY &> c8-push.txt
-  cat c8-push.txt
+  if chainloop attestation push --key env://CHAINLOOP_SIGNING_KEY &> c8-push.txt ; then
+    log "Attestation Process Completed Successfully"
+    cat c8-push.txt
+  else
+    exit_code=$?
+    log_error "Attestation Process Failed"
+    cat c8-push.txt
+    return $exit_code
+  fi
 }
 
 chainloop_generate_github_summary() {
@@ -396,10 +410,11 @@ chainloop_generate_github_summary() {
 
 chainloop_generate_github_summary_on_failure() {
   log "Generating GitHub Summary on Failure"
-  echo "\`\`\`" >> $GITHUB_STEP_SUMMARY 
+  echo -e "## Chainloop Attestation Failed\nWe could not successfully complete the Chainloop attestation process because probably some SecOps and Compliance requirements were not met:
+" >> $GITHUB_STEP_SUMMARY
   if [ -f c8-push.txt ]; then
-    echo "**" >> $GITHUB_STEP_SUMMARY
-    cat c8-push.txt | sed -r "s/[[:cntrl:]]\[[0-9]{1,3}m//g" >> $GITHUB_STEP_SUMMARY
+    echo -e "> [!WARNING]\n" >> $GITHUB_STEP_SUMMARY
+    cat c8-push.txt | sed -r "s/[[:cntrl:]]\[[0-9]{1,3}m//g" | sed 's/^/> /' >> $GITHUB_STEP_SUMMARY
     echo "**" >> $GITHUB_STEP_SUMMARY
   fi
   if [ -f c8-status.txt ]; then
