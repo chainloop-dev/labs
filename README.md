@@ -4,7 +4,7 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/chainloop-dev/chainloop/blob/main/LICENSE.md)
 
 > [!WARNING]
-> The Chainloop Labs project is meant to be to test new UX and experimental featurs. This project is under active development and you should expect breaking changes. Use at your own risk. 
+> The Chainloop Labs project is meant to test new UX and experimental features. This project is under active development, and you should expect breaking changes. Use at your own risk. 
 
 Welcome to Chainloop Labs - where we innovate, experiment, and educate to shape the future of [Chainloop](https://github.com/chainloop-dev/chainloop). 
 
