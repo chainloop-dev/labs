@@ -1,4 +1,4 @@
-name: Chainloop Metadata Collection and Attestation Process
+name: Chainloop Attestation Process
 on:
   workflow_call:
     inputs:
