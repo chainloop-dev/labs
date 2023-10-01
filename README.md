@@ -3,8 +3,8 @@
 [![Chat on Discord](https://img.shields.io/discord/1037381970189111326?logo=discord)](https://discord.gg/f7atkaZact)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/chainloop-dev/chainloop/blob/main/LICENSE.md)
 
-[!WARNING]
-The Chainloop Labs project is meant to be to test new UX and experimental featurs. This project is under active development and you should expect breaking changes. Use at your own risk. 
+> [!WARNING]
+> The Chainloop Labs project is meant to be to test new UX and experimental featurs. This project is under active development and you should expect breaking changes. Use at your own risk. 
 
 Welcome to Chainloop Labs - where we innovate, experiment, and educate to shape the future of [Chainloop](https://github.com/chainloop-dev/chainloop). 
 
