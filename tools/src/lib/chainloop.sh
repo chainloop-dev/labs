@@ -410,10 +410,9 @@ chainloop_generate_github_summary() {
 
 chainloop_generate_github_summary_on_failure() {
   log "Generating GitHub Summary on Failure"
-  echo -e "## Chainloop Attestation Failed\nWe could not successfully complete the Chainloop attestation process because probably some SecOps and Compliance requirements were not met:
-" >> $GITHUB_STEP_SUMMARY
+  echo -e "## Chainloop Attestation Failed\nWe were unable to complete the Chainloop attestation process due to unmet SecOps and Compliance requirements:" >> $GITHUB_STEP_SUMMARY
   if [ -f c8-push.txt ]; then
-    echo -e "\n> [!WARNING]" >> $GITHUB_STEP_SUMMARY
+    echo -e "\n[!WARNING]" >> $GITHUB_STEP_SUMMARY
     cat c8-push.txt | sed -r "s/[[:cntrl:]]\[[0-9]{1,3}m//g" | sed 's/^/> /' >> $GITHUB_STEP_SUMMARY
     echo -e "\n" >> $GITHUB_STEP_SUMMARY
   fi
