@@ -368,7 +368,7 @@ chainloop_adapter_run() {
 
 chainloop_attestation_add_from_yaml() {
   log "Adding Metadata files based on .chainloop.yml to attestation"
-  script=`cat .chainloop.yml | yq eval '.attestation[] | "chainloop attestation add --name "  + .name + " --value " + .path + "2>&1; "'`
+  script=`cat .chainloop.yml | yq eval '.attestation[] | "chainloop attestation add --name "  + .name + " --value " + .path + " 2>&1; "'`
   eval $script
 }
 
