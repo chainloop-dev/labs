@@ -413,7 +413,7 @@ chainloop_summary() {
   echo -e "## Great job!\nYou are making SecOps and Compliance teams really happy. Keep up the good work!\n" >> $tmpfile
   echo "**[Chainloop Trust Report](https://app.chainloop.dev/attestation/${digest})**" >> $tmpfile
   echo "\`\`\`" >> $tmpfile
-  cat c8-status.txt >> $tmp_file
+  cat c8-status.txt >> $tmpfile
   echo "\`\`\`" >> $tmpfile
   cat $tmpfile
 }
@@ -426,16 +426,16 @@ chainloop_generate_github_summary() {
 chainloop_summary_on_failure() {
   mkdir -p ${CHAINLOOP_TMP_DIR}
   tmpfile="${CHAINLOOP_TMP_DIR}/report_on_failure.txt"
-  echo -e "## Chainloop Attestation Failed\nWe were unable to complete the Chainloop attestation process due to unmet SecOps and Compliance requirements:" >> $tmp_file
+  echo -e "## Chainloop Attestation Failed\nWe were unable to complete the Chainloop attestation process due to unmet SecOps and Compliance requirements:" >> $tmpfile
   if [ -f c8-push.txt ]; then
-    echo -e "\n> [!WARNING]" >> $tmp_file
-    cat c8-push.txt | sed -r "s/[[:cntrl:]]\[[0-9]{1,3}m//g" | sed 's/^/> /' >> $tmp_file
-    echo -e "\n" >> $tmp_file
+    echo -e "\n> [!WARNING]" >> $tmpfile
+    cat c8-push.txt | sed -r "s/[[:cntrl:]]\[[0-9]{1,3}m//g" | sed 's/^/> /' >> $tmpfile
+    echo -e "\n" >> $tmpfile
   fi
   if [ -f c8-status.txt ]; then
-    echo "\`\`\`" >> $tmp_file
-    cat c8-status.txt | sed -r "s/[[:cntrl:]]\[[0-9]{1,3}m//g" >> $tmp_file
-    echo "\`\`\`" >> $tmp_file
+    echo "\`\`\`" >> $tmpfile
+    cat c8-status.txt | sed -r "s/[[:cntrl:]]\[[0-9]{1,3}m//g" >> $tmpfile
+    echo "\`\`\`" >> $tmpfile
   fi
   cat $tmpfile
 }
