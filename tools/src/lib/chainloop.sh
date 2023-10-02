@@ -100,7 +100,6 @@ validate_chainloop_required_env_vars() {
 ###
 
 install_chainloop_cli() {
-  mkdir -p $CHAINLOOP_TMP_DIR
   log "Installing Chainloop CLI"
   if [ -n "${CHAINLOOP_VERSION}" ]; then
     curl -sfL https://docs.chainloop.dev/install.sh | bash -s -- --version v${CHAINLOOP_VERSION}
@@ -396,19 +395,22 @@ chainloop_attestation_status() {
 
 chainloop_attestation_push() {
   log "Pushing Attestation"
-  if chainloop attestation push --key env://CHAINLOOP_SIGNING_KEY &> c8-push.txt ; then
+  tmp_key="${CHAINLOOP_TMP_DIR}/key"
+  echo "${CHAINLOOP_SIGNING_KEY}" > $tmp_key
+  if chainloop attestation push --key $tmp_key &> c8-push.txt ; then
     log "Attestation Process Completed Successfully"
     cat c8-push.txt
+    rm $tmp_key
   else
     exit_code=$?
     log_error "Attestation Process Failed"
     cat c8-push.txt
+    rm $tmp_key
     return $exit_code
   fi
 }
 
 chainloop_summary() {
-  mkdir -p ${CHAINLOOP_TMP_DIR}
   tmpfile="${CHAINLOOP_TMP_DIR}/report.txt"
   digest=`cat c8-push.txt| grep " Digest: " | awk -F\  '{print $3}'`
   echo -e "## Great job!\nYou are making SecOps and Compliance teams really happy. Keep up the good work!\n" >> $tmpfile
@@ -425,7 +427,6 @@ chainloop_generate_github_summary() {
 }
 
 chainloop_summary_on_failure() {
-  mkdir -p ${CHAINLOOP_TMP_DIR}
   tmpfile="${CHAINLOOP_TMP_DIR}/report_on_failure.txt"
   echo -e "## Chainloop Attestation Failed\nWe were unable to complete the Chainloop attestation process due to unmet SecOps and Compliance requirements:" >> $tmpfile
   if [ -f c8-push.txt ]; then
@@ -482,6 +483,9 @@ install_labs_helpers() {
 install_chainloop_labs() {
   logs "Installing Chainloop Labs"
   branch=${1:-main}
+
+  mkdir -p ${CHAINLOOP_TMP_DIR}
+
   install_chainloop_labs_cli ${branch}
   install_labs_helpers ${branch}
 }
