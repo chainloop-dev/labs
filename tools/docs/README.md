@@ -14,8 +14,8 @@ c8l COMMAND
 
 ## Commands
 
-- [help](c8l%20help) - Show help about a command
-- [inspect](c8l%20inspect) - [i] Inspect.
-- [cli](c8l%20cli) - Chainloop CLI UX improved
+- [help](c8l_help) - Show help about a command
+- [inspect](c8l_inspect) - [i] Inspect.
+- [cli](c8l_cli) - Chainloop CLI UX improved
 
 
