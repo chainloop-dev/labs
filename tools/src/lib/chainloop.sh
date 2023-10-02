@@ -100,7 +100,7 @@ validate_chainloop_required_env_vars() {
 ###
 
 install_chainloop_cli() {
-  mkdir $CHAINLOOP_TMP_DIR
+  mkdir -p $CHAINLOOP_TMP_DIR
   log "Installing Chainloop CLI"
   if [ -n "${CHAINLOOP_VERSION}" ]; then
     curl -sfL https://docs.chainloop.dev/install.sh | bash -s -- --version v${CHAINLOOP_VERSION}
