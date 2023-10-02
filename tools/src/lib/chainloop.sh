@@ -397,6 +397,7 @@ chainloop_attestation_status() {
 chainloop_attestation_push() {
   log "Pushing Attestation"
   tmp_key="${CHAINLOOP_TMP_DIR}/key"
+  mkdir -p ${CHAINLOOP_TMP_DIR}
   echo "${CHAINLOOP_SIGNING_KEY}" > $tmp_key
   if chainloop attestation push --key $tmp_key &> c8-push.txt ; then
     log "Attestation Process Completed Successfully"
