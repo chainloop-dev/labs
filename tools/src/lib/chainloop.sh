@@ -404,7 +404,7 @@ chainloop_attestation_push() {
   else
     log "  with CHAINLOOP_SIGNING_KEY_PATH"
     tmp_key="${CHAINLOOP_SIGNING_KEY_PATH}"
-  fi
+  fi  
   # chainloop attestation push --key env://CHAINLOOP_SIGNING_KEY
   if chainloop attestation push --key $tmp_key &> c8-push.txt ; then
     log "Attestation Process Completed Successfully"
@@ -419,8 +419,20 @@ chainloop_attestation_push() {
   fi
 }
 
+prepare_tmp_file() {
+  tmp_dir="${CHAINLOOP_TMP_DIR}"
+  file_name=$1
+  mkdir -p "${tmp_dir}"
+  t="${tmp_dir}/${file_name}"
+  if [ -f $t ]; then
+    log_error "TMP file $tmp_file already exists"
+    return 1
+  fi
+  echo $t
+} 
+
 chainloop_summary() {
-  tmpfile="${CHAINLOOP_TMP_DIR}/report.txt"
+  tmpfile=`prepare_tmp_file report.txt`
   digest=`cat c8-push.txt| grep " Digest: " | awk -F\  '{print $3}'`
   echo -e "## Great job!\nYou are making SecOps and Compliance teams really happy. Keep up the good work!\n" >> $tmpfile
   echo "**[Chainloop Trust Report](https://app.chainloop.dev/attestation/${digest})**" >> $tmpfile
@@ -436,7 +448,7 @@ chainloop_generate_github_summary() {
 }
 
 chainloop_summary_on_failure() {
-  tmpfile="${CHAINLOOP_TMP_DIR}/report_on_failure.txt"
+  tmpfile=`prepare_tmp_file report_on_failure.txt`
   echo -e "## Chainloop Attestation Failed\nWe were unable to complete the Chainloop attestation process due to unmet SecOps and Compliance requirements:" >> $tmpfile
   if [ -f c8-push.txt ]; then
     echo -e "\n> [!WARNING]" >> $tmpfile
@@ -493,7 +505,6 @@ install_chainloop_labs() {
   logs "Installing Chainloop Labs"
   branch=${1:-main}
 
-  mkdir -p ${CHAINLOOP_TMP_DIR}
 
   install_chainloop_labs_cli ${branch}
   install_labs_helpers ${branch}
