@@ -282,7 +282,7 @@ process_metadata() {
     fi
 
     log "Adding ${k}=${v} to attestation"
-    chainloop attestation add --name "${k}" --value "${v}"
+    chainloop attestation add --name "${k}" --value "${v}" 2>&1
     if [ $? -ne 0 ]; then
       log_error "Failed to add ${k} to attestation"
       return 1
@@ -375,9 +375,9 @@ chainloop_attestation_add_from_yaml() {
 chainloop_attestation_init() {
   log "Initializing Chainloop Attestation"
   if [ -z "${CHAINLOOP_CONTRACT_REVISION+x}" ]; then
-    chainloop attestation init -f
+    chainloop attestation init -f 2>&1
   else
-    chainloop attestation init -f --contract-revision ${CHAINLOOP_CONTRACT_REVISION}
+    chainloop attestation init -f --contract-revision ${CHAINLOOP_CONTRACT_REVISION} 2>&1
   fi
 }
 
@@ -505,6 +505,7 @@ install_chainloop_labs() {
   logs "Installing Chainloop Labs"
   branch=${1:-main}
 
+  mkdir -p ${CHAINLOOP_TMP_DIR}
 
   install_chainloop_labs_cli ${branch}
   install_labs_helpers ${branch}
