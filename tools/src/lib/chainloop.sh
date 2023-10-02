@@ -100,6 +100,7 @@ validate_chainloop_required_env_vars() {
 ###
 
 install_chainloop_cli() {
+  mkdir $CHAINLOOP_TMP_DIR
   log "Installing Chainloop CLI"
   if [ -n "${CHAINLOOP_VERSION}" ]; then
     curl -sfL https://docs.chainloop.dev/install.sh | bash -s -- --version v${CHAINLOOP_VERSION}
@@ -114,7 +115,7 @@ install_chainloop_cli() {
 
 install_cosign() {
   log "Installing Cosign"
-  curl -sL https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64 -o /usr/local/bin/cosign
+  curl -sfL https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64 -o /usr/local/bin/cosign
   if [ $? -ne 0 ]; then
     log_error "Cosign installation failed"
     return 1
@@ -138,7 +139,7 @@ install_syft() {
 
 install_semgrep() {
   log "Installing Semgrep"
-  python3 -m pip install semgrep
+  python3 -m pip install semgrep > $CHAINLOOP_TMP_DIR/install_semgrep.log
   if [ $? -ne 0 ]; then
     log_error "Semgrep installation failed"
     return 1
@@ -147,7 +148,7 @@ install_semgrep() {
 
 install_conftest() {
   LATEST_VERSION=$(wget -O - "https://api.github.com/repos/open-policy-agent/conftest/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | cut -c 2-)
-  wget "https://github.com/open-policy-agent/conftest/releases/download/v${LATEST_VERSION}/conftest_${LATEST_VERSION}_Linux_x86_64.tar.gz"
+  wget -q "https://github.com/open-policy-agent/conftest/releases/download/v${LATEST_VERSION}/conftest_${LATEST_VERSION}_Linux_x86_64.tar.gz" > $CHAINLOOP_TMP_DIR/install_wget.log
   tar xzf conftest_${LATEST_VERSION}_Linux_x86_64.tar.gz
   sudo mv conftest /usr/local/bin
 }
@@ -155,7 +156,7 @@ install_conftest() {
 install_oras() {
   log "Installing Oras"
   VERSION="1.0.0"
-  curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
+  curl -sLO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
   mkdir -p oras-install/
   tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
   sudo mv oras-install/oras /usr/local/bin/
@@ -169,7 +170,7 @@ install_oras() {
 
 install_jq() {
   log "Installing jq"
-  sudo apt-get install jq -y
+  sudo apt-get install jq -y > $CHAINLOOP_TMP_DIR/install_jq.log
   if [ $? -ne 0 ]; then
     log_error "jq installation failed"
     return 1
@@ -178,7 +179,7 @@ install_jq() {
 
 install_ruby_restclient() {
   log "Installing Ruby rest-client"
-  sudo gem install rest-client
+  sudo gem install rest-client > $CHAINLOOP_TMP_DIR/install_ruby_restclient.log
   if [ $? -ne 0 ]; then
     log_error "rest-client installation failed"
     return 1
@@ -197,7 +198,7 @@ install_yq() {
 
 install_parlay() {
   log "Installing Parlay"
-  wget https://github.com/snyk/parlay/releases/latest/download/parlay_Linux_x86_64.tar.gz
+  wget -qO https://github.com/snyk/parlay/releases/latest/download/parlay_Linux_x86_64.tar.gz > $CHAINLOOP_TMP_DIR/install_parlay.log
   tar -xvf parlay_Linux_x86_64.tar.gz
   sudo mv parlay /usr/local/bin/
   rm parlay_Linux_x86_64.tar.gz
@@ -334,7 +335,7 @@ chainloop_adapter_run() {
     log_header "Processing ${kind} ${repo} - artifacts $artifacts"
     log_header "  processing artifact: $app_id - $full_uri"
     log "Initializing Chainloop Attestation"
-    chainloop attestation init -f # --contract-revision 1
+    chainloop attestation init
     if [ $? -ne 0 ]; then
       log_error "Chainloop initialization failed"
       exit 1
