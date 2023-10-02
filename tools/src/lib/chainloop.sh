@@ -139,7 +139,7 @@ install_syft() {
 
 install_semgrep() {
   log "Installing Semgrep"
-  python3 -m pip install semgrep > $CHAINLOOP_TMP_DIR/install_semgrep.log
+  python3 -m pip install semgrep -q > $CHAINLOOP_TMP_DIR/install_semgrep.log
   if [ $? -ne 0 ]; then
     log_error "Semgrep installation failed"
     return 1
@@ -198,7 +198,7 @@ install_yq() {
 
 install_parlay() {
   log "Installing Parlay"
-  wget -qO https://github.com/snyk/parlay/releases/latest/download/parlay_Linux_x86_64.tar.gz > $CHAINLOOP_TMP_DIR/install_parlay.log
+  wget -q https://github.com/snyk/parlay/releases/latest/download/parlay_Linux_x86_64.tar.gz > $CHAINLOOP_TMP_DIR/install_parlay.log
   tar -xvf parlay_Linux_x86_64.tar.gz
   sudo mv parlay /usr/local/bin/
   rm parlay_Linux_x86_64.tar.gz
