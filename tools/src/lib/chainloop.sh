@@ -64,6 +64,7 @@ l() {
 # helpers
 t=$(date "+%Y%m%d%H%M%S")
 script_dir="$(cd "$(dirname "$0")" && pwd)"
+CHAINLOOP_TMP_DIR="${CHAINLOOP_TMP_DIR:-${script_dir}/tmp/chainloop}"
 
 log() {
   # echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*"
@@ -142,6 +143,13 @@ install_semgrep() {
     log_error "Semgrep installation failed"
     return 1
   fi
+}
+
+install_conftest() {
+  LATEST_VERSION=$(wget -O - "https://api.github.com/repos/open-policy-agent/conftest/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | cut -c 2-)
+  wget "https://github.com/open-policy-agent/conftest/releases/download/v${LATEST_VERSION}/conftest_${LATEST_VERSION}_Linux_x86_64.tar.gz"
+  tar xzf conftest_${LATEST_VERSION}_Linux_x86_64.tar.gz
+  sudo mv conftest /usr/local/bin
 }
 
 install_oras() {
@@ -398,29 +406,43 @@ chainloop_attestation_push() {
   fi
 }
 
+chainloop_summary() {
+  mkdir -p ${CHAINLOOP_TMP_DIR}
+  tmpfile="${CHAINLOOP_TMP_DIR}/report.txt"
+  digest=`cat c8-push.txt| grep " Digest: " | awk -F\  '{print $3}'`
+  echo -e "## Great job!\nYou are making SecOps and Compliance teams really happy. Keep up the good work!\n" >> $tmpfile
+  echo "**[Chainloop Trust Report](https://app.chainloop.dev/attestation/${digest})**" >> $tmpfile
+  echo "\`\`\`" >> $tmpfile
+  cat c8-status.txt >> $tmp_file
+  echo "\`\`\`" >> $tmpfile
+  cat $tmpfile
+}
+
 chainloop_generate_github_summary() {
   log "Generating GitHub Summary"
-  digest=`cat c8-push.txt| grep " Digest: " | awk -F\  '{print $3}'`
-  echo -e "## Great job!\nYou are making SecOps and Compliance teams really happy. Keep up the good work!\n" >> $GITHUB_STEP_SUMMARY
-  echo "**[Chainloop Trust Report](https://app.chainloop.dev/attestation/${digest})**" >> $GITHUB_STEP_SUMMARY 
-  echo "\`\`\`" >> $GITHUB_STEP_SUMMARY 
-  cat c8-status.txt >> $GITHUB_STEP_SUMMARY
-  echo "\`\`\`" >> $GITHUB_STEP_SUMMARY 
+  chainloop_summary >> $GITHUB_STEP_SUMMARY
+}
+
+chainloop_summary_on_failure() {
+  mkdir -p ${CHAINLOOP_TMP_DIR}
+  tmpfile="${CHAINLOOP_TMP_DIR}/report_on_failure.txt"
+  echo -e "## Chainloop Attestation Failed\nWe were unable to complete the Chainloop attestation process due to unmet SecOps and Compliance requirements:" >> $tmp_file
+  if [ -f c8-push.txt ]; then
+    echo -e "\n> [!WARNING]" >> $tmp_file
+    cat c8-push.txt | sed -r "s/[[:cntrl:]]\[[0-9]{1,3}m//g" | sed 's/^/> /' >> $tmp_file
+    echo -e "\n" >> $tmp_file
+  fi
+  if [ -f c8-status.txt ]; then
+    echo "\`\`\`" >> $tmp_file
+    cat c8-status.txt | sed -r "s/[[:cntrl:]]\[[0-9]{1,3}m//g" >> $tmp_file
+    echo "\`\`\`" >> $tmp_file
+  fi
+  cat $tmpfile
 }
 
 chainloop_generate_github_summary_on_failure() {
   log "Generating GitHub Summary on Failure"
-  echo -e "## Chainloop Attestation Failed\nWe were unable to complete the Chainloop attestation process due to unmet SecOps and Compliance requirements:" >> $GITHUB_STEP_SUMMARY
-  if [ -f c8-push.txt ]; then
-    echo -e "\n> [!WARNING]" >> $GITHUB_STEP_SUMMARY
-    cat c8-push.txt | sed -r "s/[[:cntrl:]]\[[0-9]{1,3}m//g" | sed 's/^/> /' >> $GITHUB_STEP_SUMMARY
-    echo -e "\n" >> $GITHUB_STEP_SUMMARY
-  fi
-  if [ -f c8-status.txt ]; then
-    echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-    cat c8-status.txt | sed -r "s/[[:cntrl:]]\[[0-9]{1,3}m//g" >> $GITHUB_STEP_SUMMARY
-    echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-  fi
+  chainloop_summary_on_failure >> $GITHUB_STEP_SUMMARY
 }
 
 chainloop_collect_logs_for_github_jobs() {
