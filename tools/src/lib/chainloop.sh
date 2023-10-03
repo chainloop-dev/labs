@@ -434,8 +434,8 @@ prepare_tmp_file() {
 chainloop_summary() {
   tmpfile=`prepare_tmp_file report.txt`
   digest=`cat c8-push.txt| grep " Digest: " | awk -F\  '{print $3}'`
-  echo -e "## Great job!\nYou are making SecOps and Compliance teams really happy. Keep up the good work!\n" >> $tmpfile
-  echo "**[Chainloop Trust Report](https://app.chainloop.dev/attestation/${digest})**" >> $tmpfile
+  echo -e "## Great job!\n\nYou are making SecOps and Compliance teams really happy. Keep up the good work!\n" >> $tmpfile
+  echo "**[Chainloop Trust Report]( https://app.chainloop.dev/attestation/${digest} )**" >> $tmpfile
   echo "\`\`\`" >> $tmpfile
   cat c8-status.txt >> $tmpfile
   echo "\`\`\`" >> $tmpfile
