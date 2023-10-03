@@ -32,7 +32,7 @@ jobs:
       - name: Install Chainloop CLI, Labs and Cosign
         run: |
           # TODO: add checksum verification
-          bash -c "$(curl -fsSL https://raw.githubusercontent.com/chainloop-dev/labs/dev/tools/src/lib/chainloop.sh) ; install_chainloop_labs dev"
+          bash -c "$(curl -fsSL https://raw.githubusercontent.com/chainloop-dev/labs/main/tools/src/lib/chainloop.sh) ; install_chainloop_labs main"
           . ~/chainloop.sh
           install_chainloop_cli_and_cosign
 
