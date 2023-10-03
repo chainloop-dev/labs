@@ -1,8 +1,11 @@
-name: Chainloop Metadata Collection and Attestation Process
+name: Chainloop Attestation Process
 on:
   workflow_call:
     inputs:
       chainloop_version:
+        required: false
+        type: string
+      contract_revision:
         required: false
         type: string
     secrets:
@@ -26,53 +29,48 @@ jobs:
           sparse-checkout: |
             .chainloop.yml
 
-      - uses: sigstore/cosign-installer@v3.1.1
-      
-      - name: Install Chainloop CLI
+      - name: Install Chainloop CLI, Labs and Cosign
         run: |
-          if [ -n "${CHAINLOOP_VERSION}" ]; then
-             curl -sfL https://docs.chainloop.dev/install.sh | bash -s -- --version v${CHAINLOOP_VERSION}
-          else
-            curl -sfL https://docs.chainloop.dev/install.sh | bash -s
-          fi
-          
+          # TODO: add checksum verification
+          bash -c "$(curl -fsSL https://raw.githubusercontent.com/chainloop-dev/labs/dev/tools/src/lib/chainloop.sh) ; install_chainloop_labs dev"
+          . ~/chainloop.sh
+          install_chainloop_cli_and_cosign
+
+      # Download all artifacts and metadata created in previous jobs/steps
+      # to make them available to the attestation process.
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v3
-      
-      - name: Initialize Attestation
-        run: chainloop attestation init # --contract-revision 2
 
+      - name: Initialize Attestation
+        run: . ~/chainloop.sh && chainloop_attestation_init
+
+      - name: logs
+        run: . ~/chainloop.sh && chainloop_collect_logs_for_github_jobs
+
+      # Collect all artifacts, reports, and metadata
+      # based on the configuration in .chainloop.yml
       - name: Add all artifacts, reports, and metadata to attestation.
-        run: |
-          script=`cat .chainloop.yml | yq eval '.attestation[] | "chainloop attestation add --name "  + .name + " --value " + .path + "; "'`
-          eval $script
+        run: . ~/chainloop.sh && chainloop_attestation_add_from_yaml
  
       - name: Chainloop Attestation Status
-        run: |
-          chainloop attestation status --full &> c8-status.txt
+        run: . ~/chainloop.sh && chainloop_attestation_status
  
       - name: Validate Collected Artifacts and Record Attestation
         if: ${{ success() }}
-        run: |
-          chainloop attestation push --key env://CHAINLOOP_SIGNING_KEY &> c8-push.txt
+        run: . ~/chainloop.sh && chainloop_attestation_push
         env:
           CHAINLOOP_SIGNING_KEY: ${{ secrets.signing_key }}
           CHAINLOOP_SIGNING_PASSWORD: ${{ secrets.signing_key_password }}
   
       - name: Generate a summary report
-        run: |  
-          digest=`cat c8-push.txt| grep " Digest: " | awk -F\  '{print $3}'`
-          echo -e "## Great job!\nYou are making SecOps and Compliance teams really happy. Keep up the good work!\n" >> $GITHUB_STEP_SUMMARY
-          echo "**[Chainloop Trust Report](https://app.chainloop.dev/attestation/${digest})**" >> $GITHUB_STEP_SUMMARY 
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY 
-          cat c8-status.txt >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY 
+        run: . ~/chainloop.sh && chainloop_generate_github_summary
 
       - name: Mark attestation as failed
         if: ${{ failure() }}
         run: |
           chainloop attestation reset
-
+          . ~/chainloop.sh && chainloop_generate_github_summary_on_failure
+          
       - name: Mark attestation as cancelled
         if: ${{ cancelled() }}
         run: |
@@ -81,4 +79,5 @@ jobs:
     env:
       CHAINLOOP_VERSION: ${{ inputs.chainloop_version }}
       CHAINLOOP_ROBOT_ACCOUNT: ${{ secrets.api_token }}
+      CHAINLOOP_CONTRACT_REVISION: ${{ inputs.contract_revision }}
       
