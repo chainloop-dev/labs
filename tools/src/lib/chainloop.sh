@@ -242,7 +242,7 @@ chainloop_attestation_add_from_yaml() {
 
 chainloop_attestation_init() {
   log "Initializing Chainloop Attestation"
-  if [ -z "${CHAINLOOP_CONTRACT_REVISION+x}" ]; then
+  if [ -z "${CHAINLOOP_CONTRACT_REVISION}" ]; then
     chainloop attestation init -f 2>&1
   else
     chainloop attestation init -f --contract-revision ${CHAINLOOP_CONTRACT_REVISION} 2>&1
