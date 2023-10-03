@@ -338,7 +338,7 @@ chainloop_generate_github_summary_on_failure() {
 
 chainloop_collect_logs_for_github_jobs() {
   log "Collecting logs for GitHub Jobs"
-  # requires GH_TOKEN github.token 
+  # GITHUB_TOKEN is required for this to work
   # https://docs.github.com/en/rest/actions/workflow-jobs?apiVersion=2022-11-28#download-job-logs-for-a-workflow-run
   mkdir -p metadata/gh_logs
   gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs > metadata/gh_logs/jobs.json
