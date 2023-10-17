@@ -370,7 +370,7 @@ install_labs_helpers() {
 }
 
 install_chainloop_labs() {
-  logs "Installing Chainloop Labs"
+  log "Installing Chainloop Labs"
   branch=${1:-main}
 
   mkdir -p ${CHAINLOOP_TMP_DIR}
