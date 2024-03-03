@@ -41,7 +41,7 @@ cyan_underlined() { print_in_color "\e[4;36m" "$*"; }
 ###
 
 is_chainloop_in_path() {
-  if command -v chainloop &> /dev/null; then
+  if command -v chainloop &>/dev/null; then
     # we are good
     return 0
   else
@@ -51,9 +51,9 @@ is_chainloop_in_path() {
 }
 
 validate_env() {
-    if [ ! is_chainloop_in_path ] ; then
-        exit 1
-    fi
+  if [ ! is_chainloop_in_path ]; then
+    exit 1
+  fi
 }
 
 l() {
@@ -139,7 +139,7 @@ install_syft() {
 
 install_semgrep() {
   log "Installing Semgrep"
-  python3 -m pip install semgrep -q > $CHAINLOOP_TMP_DIR/install_semgrep.log
+  python3 -m pip install semgrep -q >$CHAINLOOP_TMP_DIR/install_semgrep.log
   if [ $? -ne 0 ]; then
     log_error "Semgrep installation failed"
     return 1
@@ -148,9 +148,9 @@ install_semgrep() {
 
 install_conftest() {
   LATEST_VERSION=$(wget -O - "https://api.github.com/repos/open-policy-agent/conftest/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | cut -c 2-)
-  wget -q "https://github.com/open-policy-agent/conftest/releases/download/v${LATEST_VERSION}/conftest_${LATEST_VERSION}_Linux_x86_64.tar.gz" > $CHAINLOOP_TMP_DIR/install_wget.log
+  wget -q "https://github.com/open-policy-agent/conftest/releases/download/v${LATEST_VERSION}/conftest_${LATEST_VERSION}_Linux_x86_64.tar.gz" >$CHAINLOOP_TMP_DIR/install_wget.log
   tar xzf conftest_${LATEST_VERSION}_Linux_x86_64.tar.gz
-  sudo mv conftest /usr/local/bin
+  $SUDO_CMD mv conftest /usr/local/bin
 }
 
 install_oras() {
@@ -159,7 +159,7 @@ install_oras() {
   curl -sLO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
   mkdir -p oras-install/
   tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
-  sudo mv oras-install/oras /usr/local/bin/
+  $SUDO_CMD mv oras-install/oras /usr/local/bin/
   rm -rf oras_${VERSION}_*.tar.gz oras-install/
   oras version
   if [ $? -ne 0 ]; then
@@ -170,7 +170,7 @@ install_oras() {
 
 install_jq() {
   log "Installing jq"
-  sudo apt-get install jq -y > $CHAINLOOP_TMP_DIR/install_jq.log
+  $SUDO_CMD apt-get install jq -y >$CHAINLOOP_TMP_DIR/install_jq.log
   if [ $? -ne 0 ]; then
     log_error "jq installation failed"
     return 1
@@ -179,7 +179,7 @@ install_jq() {
 
 install_ruby_restclient() {
   log "Installing Ruby rest-client"
-  sudo gem install rest-client > $CHAINLOOP_TMP_DIR/install_ruby_restclient.log
+  $SUDO_CMD gem install rest-client >$CHAINLOOP_TMP_DIR/install_ruby_restclient.log
   if [ $? -ne 0 ]; then
     log_error "rest-client installation failed"
     return 1
@@ -188,19 +188,19 @@ install_ruby_restclient() {
 
 install_yq() {
   log "Installing yq"
-  sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+  $SUDO_CMD wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
   if [ $? -ne 0 ]; then
     log_error "yq installation failed"
     return 1
   fi
-  sudo chmod a+x /usr/local/bin/yq
+  $SUDO_CMD chmod a+x /usr/local/bin/yq
 }
 
 install_parlay() {
   log "Installing Parlay"
-  wget -q https://github.com/snyk/parlay/releases/latest/download/parlay_Linux_x86_64.tar.gz > $CHAINLOOP_TMP_DIR/install_parlay.log
+  wget -q https://github.com/snyk/parlay/releases/latest/download/parlay_Linux_x86_64.tar.gz >$CHAINLOOP_TMP_DIR/install_parlay.log
   tar -xvf parlay_Linux_x86_64.tar.gz
-  sudo mv parlay /usr/local/bin/
+  $SUDO_CMD mv parlay /usr/local/bin/
   rm parlay_Linux_x86_64.tar.gz
 }
 
@@ -236,7 +236,7 @@ install_chainloop_tools() {
 
 chainloop_attestation_add_from_yaml() {
   log "Adding Metadata files based on .chainloop.yml to attestation"
-  script=`cat .chainloop.yml | yq eval '.attestation[] | "chainloop attestation add --name "  + .name + " --value " + .path + " 2>&1; "'`
+  script=$(cat .chainloop.yml | yq eval '.attestation[] | "chainloop attestation add --name "  + .name + " --value " + .path + " 2>&1; "')
   eval $script
 }
 
@@ -251,7 +251,7 @@ chainloop_attestation_init() {
 
 chainloop_attestation_status() {
   log "Checking Attestation Status"
-  if chainloop attestation status --full &> c8-status.txt ; then
+  if chainloop attestation status --full &>c8-status.txt; then
     log "Attestation Status Process Completed Successfully"
     cat c8-status.txt
   else
@@ -268,13 +268,13 @@ chainloop_attestation_push() {
     log "  with CHAINLOOP_SIGNING_KEY"
     tmp_key="${CHAINLOOP_TMP_DIR}/key"
     mkdir -p "${CHAINLOOP_TMP_DIR}"
-    echo "${CHAINLOOP_SIGNING_KEY}" > $tmp_key
+    echo "${CHAINLOOP_SIGNING_KEY}" >$tmp_key
   else
     log "  with CHAINLOOP_SIGNING_KEY_PATH"
     tmp_key="${CHAINLOOP_SIGNING_KEY_PATH}"
-  fi  
+  fi
   # chainloop attestation push --key env://CHAINLOOP_SIGNING_KEY
-  if chainloop attestation push --key $tmp_key &> c8-push.txt ; then
+  if chainloop attestation push --key $tmp_key &>c8-push.txt; then
     log "Attestation Process Completed Successfully"
     cat c8-push.txt
     rm $tmp_key
@@ -297,43 +297,43 @@ prepare_tmp_file() {
     return 1
   fi
   echo $t
-} 
+}
 
 chainloop_summary() {
-  tmpfile=`prepare_tmp_file report.txt`
-  digest=`cat c8-push.txt| grep " Digest: " | awk -F\  '{print $3}'`
-  echo -e "## Great job!\n\nYou are making SecOps and Compliance teams really happy. Keep up the good work!\n" >> $tmpfile
-  echo "**[Chainloop Trust Report]( https://app.chainloop.dev/attestation/${digest} )**" >> $tmpfile
-  echo "\`\`\`" >> $tmpfile
-  cat c8-status.txt >> $tmpfile
-  echo "\`\`\`" >> $tmpfile
+  tmpfile=$(prepare_tmp_file report.txt)
+  digest=$(cat c8-push.txt | grep " Digest: " | awk -F\  '{print $3}')
+  echo -e "## Great job!\n\nYou are making SecOps and Compliance teams really happy. Keep up the good work!\n" >>$tmpfile
+  echo "**[Chainloop Trust Report]( https://app.chainloop.dev/attestation/${digest} )**" >>$tmpfile
+  echo "\`\`\`" >>$tmpfile
+  cat c8-status.txt >>$tmpfile
+  echo "\`\`\`" >>$tmpfile
   cat $tmpfile
 }
 
 chainloop_generate_github_summary() {
   log "Generating GitHub Summary"
-  chainloop_summary >> $GITHUB_STEP_SUMMARY
+  chainloop_summary >>$GITHUB_STEP_SUMMARY
 }
 
 chainloop_summary_on_failure() {
-  tmpfile=`prepare_tmp_file report_on_failure.txt`
-  echo -e "## Chainloop Attestation Failed\nWe were unable to complete the Chainloop attestation process due to unmet SecOps and Compliance requirements:" >> $tmpfile
+  tmpfile=$(prepare_tmp_file report_on_failure.txt)
+  echo -e "## Chainloop Attestation Failed\nWe were unable to complete the Chainloop attestation process due to unmet SecOps and Compliance requirements:" >>$tmpfile
   if [ -f c8-push.txt ]; then
-    echo -e "\n> [!WARNING]" >> $tmpfile
-    cat c8-push.txt | sed -r "s/[[:cntrl:]]\[[0-9]{1,3}m//g" | sed 's/^/> /' >> $tmpfile
-    echo -e "\n" >> $tmpfile
+    echo -e "\n> [!WARNING]" >>$tmpfile
+    cat c8-push.txt | sed -r "s/[[:cntrl:]]\[[0-9]{1,3}m//g" | sed 's/^/> /' >>$tmpfile
+    echo -e "\n" >>$tmpfile
   fi
   if [ -f c8-status.txt ]; then
-    echo "\`\`\`" >> $tmpfile
-    cat c8-status.txt | sed -r "s/[[:cntrl:]]\[[0-9]{1,3}m//g" >> $tmpfile
-    echo "\`\`\`" >> $tmpfile
+    echo "\`\`\`" >>$tmpfile
+    cat c8-status.txt | sed -r "s/[[:cntrl:]]\[[0-9]{1,3}m//g" >>$tmpfile
+    echo "\`\`\`" >>$tmpfile
   fi
   cat $tmpfile
 }
 
 chainloop_generate_github_summary_on_failure() {
   log "Generating GitHub Summary on Failure"
-  chainloop_summary_on_failure >> $GITHUB_STEP_SUMMARY
+  chainloop_summary_on_failure >>$GITHUB_STEP_SUMMARY
 }
 
 chainloop_collect_logs_for_github_jobs() {
@@ -341,9 +341,9 @@ chainloop_collect_logs_for_github_jobs() {
   # GH_TOKEN or GITHUB_TOKEN is required for this to work
   # https://docs.github.com/en/rest/actions/workflow-jobs?apiVersion=2022-11-28#download-job-logs-for-a-workflow-run
   mkdir -p metadata/gh_logs
-  gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs > metadata/gh_logs/jobs.json
-  for j in `cat metadata/gh_logs/jobs.json | jq '.jobs[].id'` ; do
-    gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${GITHUB_REPOSITORY}/actions/jobs/${j}/logs > metadata/gh_logs/${j}.log
+  gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs >metadata/gh_logs/jobs.json
+  for j in $(cat metadata/gh_logs/jobs.json | jq '.jobs[].id'); do
+    gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${GITHUB_REPOSITORY}/actions/jobs/${j}/logs >metadata/gh_logs/${j}.log
   done
 }
 
@@ -351,12 +351,12 @@ install_chainloop_labs_cli() {
   log "Installing Chainloop Labs CLI"
   mkdir -p metadata
   branch=${1:-main}
-  sudo curl -sfL https://raw.githubusercontent.com/chainloop-dev/labs/${branch}/tools/c8l -o /usr/local/bin/c8l
+  $SUDO_CMD curl -sfL https://raw.githubusercontent.com/chainloop-dev/labs/${branch}/tools/c8l -o /usr/local/bin/c8l
   if [ $? -ne 0 ]; then
     log_error "Failed to install labs CLI"
     return 1
   fi
-  sudo chmod +x /usr/local/bin/c8l
+  $SUDO_CMD chmod +x /usr/local/bin/c8l
 }
 
 install_labs_helpers() {
