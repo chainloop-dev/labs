@@ -385,6 +385,6 @@ install_chainloop_labs() {
 #   source <(c8l source)
 source_chainloop_labs() {
   script_path=$(readlink -f "$0")
-  export PATH=/usr/local/bin:.:$PATH
+  echo "export PATH=\"/usr/local/bin:.:$PATH\""
   cat $script_path | sed '$d' | sed '$d'
 }
