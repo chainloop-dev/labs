@@ -252,7 +252,7 @@ chainloop_attestation_init() {
     log_error "Chainloop initialization failed: $r"
     exit 1
   fi
-  export CHAINLOOP_ATTESTATION_ID=$(echo $r | jq -r '.attestationID')
+  export CHAINLOOP_ATTESTATION_ID=$(echo $r | grep attestationID | awk -F\" '{print $4}')
   log "Attestation ID: $CHAINLOOP_ATTESTATION_ID"
 }
 
