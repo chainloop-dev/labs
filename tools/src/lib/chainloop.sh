@@ -251,8 +251,8 @@ chainloop_attestation_init() {
     log_error "Chainloop initialization failed"
     exit 1
   fi
-  ATT_ID=$(echo $r | jq -r '.attestationID')
-  log "Attestation ID: $ATT_ID"
+  CHAINLOOP_ATTESTATION_ID=$(echo $r | jq -r '.attestationID')
+  log "Attestation ID: $CHAINLOOP_ATTESTATION_ID"
 }
 
 chainloop_attestation_status() {
