@@ -126,6 +126,7 @@ install_cosign() {
 install_chainloop_cli_and_cosign() {
   install_cosign
   install_chainloop_cli
+  mv /usr/local/bin/cosign /usr/local/bin/chainloop .
 }
 
 install_syft() {
@@ -251,7 +252,7 @@ chainloop_attestation_init() {
     log_error "Chainloop initialization failed"
     exit 1
   fi
-  CHAINLOOP_ATTESTATION_ID=$(echo $r | jq -r '.attestationID')
+  export CHAINLOOP_ATTESTATION_ID=$(echo $r | jq -r '.attestationID')
   log "Attestation ID: $CHAINLOOP_ATTESTATION_ID"
 }
 
@@ -384,5 +385,6 @@ install_chainloop_labs() {
 #   source <(c8l source)
 source_chainloop_labs() {
   script_path=$(readlink -f "$0")
+  export PATH=/usr/local/bin:.:$PATH
   cat $script_path | sed '$d' | sed '$d'
 }
