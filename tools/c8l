@@ -946,7 +946,6 @@ install_chainloop_labs() {
 # how to use it:
 #   source <(c8l source)
 source_chainloop_labs() {
-  log "Sourcing Chainloop Labs"
   script_path=$(readlink -f "$0")
   cat $script_path | sed '$d' | sed '$d'
 }
