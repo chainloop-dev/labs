@@ -371,16 +371,6 @@ install_chainloop_labs_cli() {
   $SUDO_CMD chmod +x /usr/local/bin/c8l
 }
 
-install_labs_helpers() {
-  log "Installing Chainloop Labs Helpers"
-  branch=${1:-main}
-  curl -sfL https://raw.githubusercontent.com/chainloop-dev/labs/${branch}/tools/src/lib/chainloop.sh -o ~/chainloop.sh
-  if [ $? -ne 0 ]; then
-    log_error "Failed to install labs helpers"
-    return 1
-  fi
-}
-
 install_chainloop_labs() {
   log "Installing Chainloop Labs"
   branch=${1:-main}
@@ -388,5 +378,11 @@ install_chainloop_labs() {
   mkdir -p ${CHAINLOOP_TMP_DIR}
 
   install_chainloop_labs_cli ${branch}
-  install_labs_helpers ${branch}
+}
+
+# how to use it:
+#   source <(c8l source)
+source_chainloop_labs() {
+  script_path=$(readlink -f "$0")
+  cat $script_path | sed '$d' | sed '$d'
 }
