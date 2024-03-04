@@ -256,7 +256,7 @@ install_chainloop_tools() {
 
 chainloop_attestation_add_from_yaml() {
   log "Adding Metadata files based on .chainloop.yml to attestation"
-  script=$(cat .chainloop.yml | yq eval '.attestation[] | "chainloop attestation add --name "  + .name + " --value " + .path + " --remote-state --attestation-id ${ATTESTATION_ID} 2>&1; "')
+  script=$(cat .chainloop.yml | yq eval '.attestation[] | "chainloop attestation add --name "  + .name + " --value " + .path + " --remote-state --attestation-id ${CHAINLOOP_ATTESTATION_ID} 2>&1; "')
   echo $script
   eval $script
 }
@@ -278,7 +278,7 @@ chainloop_attestation_init() {
 
 chainloop_attestation_status() {
   log "Checking Attestation Status"
-  if chainloop attestation status --full --remote-state --attestation-id "${ATTESTATION_ID}" &>c8-status.txt; then
+  if chainloop attestation status --full --remote-state --attestation-id "${CHAINLOOP_ATTESTATION_ID}" &>c8-status.txt; then
     log "Attestation Status Process Completed Successfully"
     cat c8-status.txt
   else
@@ -307,7 +307,7 @@ chainloop_attestation_push() {
     tmp_key="${CHAINLOOP_SIGNING_KEY_PATH}"
   fi
   # chainloop attestation push --key env://CHAINLOOP_SIGNING_KEY
-  if chainloop attestation push --key $tmp_key --remote-state --attestation-id "${ATTESTATION_ID}" &>c8-push.txt; then
+  if chainloop attestation push --key $tmp_key --remote-state --attestation-id "${CHAINLOOP_ATTESTATION_ID}" &>c8-push.txt; then
     log "Attestation Process Completed Successfully"
     cat c8-push.txt
     rm $tmp_key
