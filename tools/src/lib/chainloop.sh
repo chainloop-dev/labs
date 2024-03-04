@@ -97,12 +97,19 @@ validate_chainloop_required_env_vars() {
   fi
 }
 
-# if CHAINLOOP_BIN_PATH is not set, it will default to ./bin
-export CHAINLOOP_BIN_PATH="${CHAINLOOP_BIN_PATH:-./bin}"
+export CHAINLOOP_BIN_PATH="${CHAINLOOP_BIN_PATH:-/usr/local/chainloop}"
 
 install_in_chainloop_bin() {
   file=$1
-  chmod +x $file
+}
+
+chainloop_bin_install() {
+  # it takes the list of paths and installs them in the CHAINLOOP_BIN_PATH
+  mkdir -p $CHAINLOOP_BIN_PATH
+  for file in $@; do
+    mv $file $CHAINLOOP_BIN_PATH
+  done
+  chmod +x $CHAINLOOP_BIN_PATH/*
 }
 
 generic_install() {
