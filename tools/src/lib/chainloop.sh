@@ -99,10 +99,6 @@ validate_chainloop_required_env_vars() {
 
 export CHAINLOOP_BIN_PATH="${CHAINLOOP_BIN_PATH:-/usr/local/chainloop}"
 
-install_in_chainloop_bin() {
-  file=$1
-}
-
 chainloop_bin_install() {
   # it takes the list of paths and installs them in the CHAINLOOP_BIN_PATH
   mkdir -p $CHAINLOOP_BIN_PATH
@@ -110,6 +106,13 @@ chainloop_bin_install() {
     mv $file $CHAINLOOP_BIN_PATH
   done
   chmod +x $CHAINLOOP_BIN_PATH/*
+}
+
+# chainloop_install takes the list of tools and installs them with functions below install_${name}
+chainloop_install() {
+  for tool in $@; do
+    install_${tool}
+  done
 }
 
 generic_install() {
