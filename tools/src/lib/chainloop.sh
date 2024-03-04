@@ -98,7 +98,7 @@ validate_chainloop_required_env_vars() {
 }
 
 # if CHAINLOOP_BIN_PATH is not set, it will default to ./bin
-CHAINLOOP_BIN_PATH="${CHAINLOOP_BIN_PATH:-~/bin}"
+export CHAINLOOP_BIN_PATH="${CHAINLOOP_BIN_PATH:-$HOME/bin}"
 
 install_in_chainloop_bin() {
   file=$1
