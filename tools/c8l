@@ -662,14 +662,36 @@ validate_chainloop_required_env_vars() {
   fi
 }
 
+# if CHAINLOOP_BIN_PATH is not set, it will default to ./bin
+CHAINLOOP_BIN_PATH="${CHAINLOOP_BIN_PATH:-~/bin}"
+
+install_in_chainloop_bin() {
+  file=$1
+  chmod +x $file
+}
+
+generic_install() {
+  file=$1
+  url=$2
+  file_path=$CHAINLOOP_BIN_PATH/$file
+
+  mkdir -p $CHAINLOOP_BIN_PATH
+  log "Installing $file"
+  curl -sfL $url -o $file_path
+  if [ $? -ne 0 ]; then
+    log_error "$file installation failed"
+    return 1
+  fi
+  chmod +x $file_path
+}
 
 install_chainloop_cli() {
-  mkdir -p ${CHAINLOOP_TMP_DIR}
+  mkdir -p ${CHAINLOOP_TMP_DIR} $CHAINLOOP_BIN_PATH
   log "Installing Chainloop CLI"
   if [ -n "${CHAINLOOP_VERSION}" ]; then
-    curl -sfL https://docs.chainloop.dev/install.sh | bash -s -- --version v${CHAINLOOP_VERSION}
+    curl -sfL https://docs.chainloop.dev/install.sh | bash -s -- --version v${CHAINLOOP_VERSION} --path $CHAINLOOP_BIN_PATH
   else
-    curl -sfL https://docs.chainloop.dev/install.sh | bash -s
+    curl -sfL https://docs.chainloop.dev/install.sh | bash -s -- --path $CHAINLOOP_BIN_PATH
   fi
   if [ $? -ne 0 ]; then
     log_error "Chainloop installation failed"
@@ -678,24 +700,17 @@ install_chainloop_cli() {
 }
 
 install_cosign() {
-  log "Installing Cosign"
-  curl -sfL https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64 -o /usr/local/bin/cosign
-  if [ $? -ne 0 ]; then
-    log_error "Cosign installation failed"
-    return 1
-  fi
-  chmod +x /usr/local/bin/cosign
+  generic_install cosign https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64
 }
 
 install_chainloop_cli_and_cosign() {
   install_cosign
   install_chainloop_cli
-  mv /usr/local/bin/cosign /usr/local/bin/chainloop .
 }
 
 install_syft() {
   log "Installing Syft"
-  curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+  curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b $CHAINLOOP_BIN_PATH
   if [ $? -ne 0 ]; then
     log_error "Syft installation failed"
     return 1
@@ -715,7 +730,7 @@ install_conftest() {
   LATEST_VERSION=$(wget -O - "https://api.github.com/repos/open-policy-agent/conftest/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | cut -c 2-)
   wget -q "https://github.com/open-policy-agent/conftest/releases/download/v${LATEST_VERSION}/conftest_${LATEST_VERSION}_Linux_x86_64.tar.gz" >$CHAINLOOP_TMP_DIR/install_wget.log
   tar xzf conftest_${LATEST_VERSION}_Linux_x86_64.tar.gz
-  $SUDO_CMD mv conftest /usr/local/bin
+  $SUDO_CMD mv conftest $CHAINLOOP_BIN_PATH
 }
 
 install_oras() {
@@ -724,7 +739,7 @@ install_oras() {
   curl -sLO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
   mkdir -p oras-install/
   tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
-  $SUDO_CMD mv oras-install/oras /usr/local/bin/
+  $SUDO_CMD mv oras-install/oras $CHAINLOOP_BIN_PATH
   rm -rf oras_${VERSION}_*.tar.gz oras-install/
   oras version
   if [ $? -ne 0 ]; then
@@ -752,20 +767,14 @@ install_ruby_restclient() {
 }
 
 install_yq() {
-  log "Installing yq"
-  $SUDO_CMD wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
-  if [ $? -ne 0 ]; then
-    log_error "yq installation failed"
-    return 1
-  fi
-  $SUDO_CMD chmod a+x /usr/local/bin/yq
+  generic_install yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
 }
 
 install_parlay() {
   log "Installing Parlay"
   wget -q https://github.com/snyk/parlay/releases/latest/download/parlay_Linux_x86_64.tar.gz >$CHAINLOOP_TMP_DIR/install_parlay.log
   tar -xvf parlay_Linux_x86_64.tar.gz
-  $SUDO_CMD mv parlay /usr/local/bin/
+  $SUDO_CMD mv parlay $CHAINLOOP_BIN_PATH
   rm parlay_Linux_x86_64.tar.gz
 }
 
@@ -781,9 +790,9 @@ spdx2cyclonedx() {
 
 install_chainloop_tools() {
   log_header "Installing Chainloop Tools"
-  export PATH=/usr/local/bin:$PATH
+  export PATH=$CHAINLOOP_BIN_PATH:$PATH
 
-  if [ -f /usr/local/bin/chainloop ]; then
+  if [ -f $CHAINLOOP_BIN_PATH/chainloop ]; then
     log "Skipping... Chainloop Tools already installed"
     return 0
   fi
@@ -923,32 +932,17 @@ chainloop_collect_logs_for_github_jobs() {
   done
 }
 
-install_chainloop_labs_cli() {
-  log "Installing Chainloop Labs CLI"
-  mkdir -p metadata
-  branch=${1:-main}
-  $SUDO_CMD curl -sfL https://raw.githubusercontent.com/chainloop-dev/labs/${branch}/tools/c8l -o /usr/local/bin/c8l
-  if [ $? -ne 0 ]; then
-    log_error "Failed to install labs CLI"
-    return 1
-  fi
-  $SUDO_CMD chmod +x /usr/local/bin/c8l
-}
-
 install_chainloop_labs() {
-  log "Installing Chainloop Labs"
-  branch=${1:-main}
-
   mkdir -p ${CHAINLOOP_TMP_DIR}
-
-  install_chainloop_labs_cli ${branch}
+  branch=${1:-main}
+  generic_install c8l https://raw.githubusercontent.com/chainloop-dev/labs/${branch}/tools/c8l
 }
 
 # how to use it:
 #   source <(c8l source)
 source_chainloop_labs() {
   script_path=$(readlink -f "$0")
-  echo "export PATH=\"/usr/local/bin:.:$PATH\""
+  echo "export PATH=\"/usr/local/bin:$CHAINLOOP_BIN_PATH:$PATH\""
   cat $script_path | sed '$d' | sed '$d'
 }
 
