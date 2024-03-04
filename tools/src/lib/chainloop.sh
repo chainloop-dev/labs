@@ -294,8 +294,8 @@ chainloop_attestation_push() {
   if [ -n "${CHAINLOOP_USE_INSECURE_KEY}" ]; then
     log "# USING INSECURE KEY BECAUSE CHAINLOOP_USE_INSECURE_KEY is set"
     CHAINLOOP_SIGNING_KEY_PATH="cosign.key"
-    CHAINLOOP_SIGNING_PASSWORD="insecure"
-    echo $CHAINLOOP_SIGNING_KEY | cosign generate-key-pair
+    export CHAINLOOP_SIGNING_PASSWORD=""
+    echo "$CHAINLOOP_SIGNING_PASSWORD" | cosign generate-key-pair
   fi
   if [ -z "${CHAINLOOP_SIGNING_KEY_PATH+x}" ]; then
     log "  with CHAINLOOP_SIGNING_KEY"
