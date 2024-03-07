@@ -8,6 +8,10 @@ on:
       contract_revision:
         required: false
         type: string
+      chainloop_config:
+        required: false
+        type: string
+        default: ".chainloop.yml"
     secrets:
       api_token:
         required: true
@@ -27,7 +31,7 @@ jobs:
         with:
           fetch-depth: 0
           sparse-checkout: |
-            .chainloop.yml
+            ${{ inputs.chainloop_config }}
 
       - name: Install Chainloop CLI, Labs and Cosign
         run: |
