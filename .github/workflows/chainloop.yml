@@ -11,6 +11,10 @@ on:
       attestation_name:
         required: false
         type: string
+      chainloop_labs_branch:
+        required: false
+        type: string
+        default: main
     secrets:
       api_token:
         required: true
@@ -35,9 +39,10 @@ jobs:
       - name: Install Chainloop CLI, Labs and Cosign
         run: |
           # TODO: add checksum verification
-          bash -c "$(curl -fsSL https://raw.githubusercontent.com/chainloop-dev/labs/main/tools/src/lib/chainloop.sh) ; install_chainloop_labs main"
-          . ~/chainloop.sh
-          install_chainloop_cli_and_cosign
+          curl -o c8l https://raw.githubusercontent.com/chainloop-dev/labs/${{ inputs.chainloop_labs_branch }}/tools/c8l
+          chmod +x c8l; source <(./c8l source)
+          chainloop_bin_install c8l
+          chainloop_install chainloop_cli cosign
 
       # Download all artifacts and metadata created in previous jobs/steps
       # to make them available to the attestation process.
@@ -45,36 +50,45 @@ jobs:
         uses: actions/download-artifact@v4
 
       - name: Initialize Attestation
-        run: . ~/chainloop.sh && chainloop_attestation_init
+        run: source <(/usr/local/chainloop/c8l source) && chainloop_attestation_init
 
       - name: logs
-        run: . ~/chainloop.sh && chainloop_collect_logs_for_github_jobs
+        run: source <(/usr/local/chainloop/c8l source) && chainloop_collect_logs_for_github_jobs
         env:
           GH_TOKEN: ${{ github.token }}
 
       # Collect all artifacts, reports, and metadata
       # based on the configuration in .chainloop.yml
       - name: Add all artifacts, reports, and metadata to attestation.
-        run: . ~/chainloop.sh && chainloop_attestation_add_from_yaml ${{ inputs.attestation_name }}
+        run: |
+          source <(/usr/local/chainloop/c8l source)
+          chainloop_attestation_add_from_yaml ${{ inputs.attestation_name }}
  
       - name: Chainloop Attestation Status
-        run: . ~/chainloop.sh && chainloop_attestation_status
+        run: |
+          source <(/usr/local/chainloop/c8l source)
+          chainloop_attestation_status
  
       - name: Validate Collected Artifacts and Record Attestation
         if: ${{ success() }}
-        run: . ~/chainloop.sh && chainloop_attestation_push
+        run: |
+          source <(/usr/local/chainloop/c8l source)
+          chainloop_attestation_push
         env:
           CHAINLOOP_SIGNING_KEY: ${{ secrets.signing_key }}
           CHAINLOOP_SIGNING_PASSWORD: ${{ secrets.signing_key_password }}
   
       - name: Generate a summary report
-        run: . ~/chainloop.sh && chainloop_generate_github_summary
+        run: |
+          source <(/usr/local/chainloop/c8l source)
+          chainloop_generate_github_summary
 
       - name: Mark attestation as failed
         if: ${{ failure() }}
         run: |
+          source <(/usr/local/chainloop/c8l source)
           chainloop attestation reset
-          . ~/chainloop.sh && chainloop_generate_github_summary_on_failure
+          chainloop_generate_github_summary_on_failure
           
       - name: Mark attestation as cancelled
         if: ${{ cancelled() }}
