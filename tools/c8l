@@ -823,7 +823,7 @@ chainloop_attestation_add_from_yaml() {
   fi
   log "Adding Metadata files based on .chainloop.yml to attestation"
   script=$(cat .chainloop.yml | yq eval '.[strenv(ATTESTATION_NAME)][] | "chainloop attestation add --name "  + .name + " --value " + .path + " --remote-state --attestation-id ${CHAINLOOP_ATTESTATION_ID} 2>&1; "')
-  echo $script
+  log $script
   eval $script
 }
 
