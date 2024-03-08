@@ -97,7 +97,7 @@ validate_chainloop_required_env_vars() {
   fi
 }
 
-export CHAINLOOP_BIN_PATH="${CHAINLOOP_BIN_PATH:-/usr/local/chainloop}"
+export CHAINLOOP_BIN_PATH="${CHAINLOOP_BIN_PATH:-/usr/local/bin/chainloop}"
 
 chainloop_bin_install() {
   # it takes the list of paths and installs them in the CHAINLOOP_BIN_PATH
