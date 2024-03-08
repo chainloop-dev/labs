@@ -8,10 +8,9 @@ on:
       contract_revision:
         required: false
         type: string
-      chainloop_config:
+      attestation_name:
         required: false
         type: string
-        default: ".chainloop.yml"
     secrets:
       api_token:
         required: true
@@ -31,7 +30,7 @@ jobs:
         with:
           fetch-depth: 0
           sparse-checkout: |
-            ${{ inputs.chainloop_config }}
+            .chainloop.yml
 
       - name: Install Chainloop CLI, Labs and Cosign
         run: |
@@ -56,7 +55,7 @@ jobs:
       # Collect all artifacts, reports, and metadata
       # based on the configuration in .chainloop.yml
       - name: Add all artifacts, reports, and metadata to attestation.
-        run: . ~/chainloop.sh && chainloop_attestation_add_from_yaml
+        run: . ~/chainloop.sh && chainloop_attestation_add_from_yaml ${{ inputs.attestation_name }}
  
       - name: Chainloop Attestation Status
         run: . ~/chainloop.sh && chainloop_attestation_status

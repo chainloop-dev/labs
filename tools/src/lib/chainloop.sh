@@ -255,6 +255,7 @@ install_chainloop_tools() {
 ###
 
 chainloop_attestation_add_from_yaml() {
+  export ATTESTATION_NAME=$1
   if [ -z "${ATTESTATION_NAME}" ]; then
     export ATTESTATION_NAME="attestation"
   fi
