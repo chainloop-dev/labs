@@ -280,7 +280,7 @@ chainloop_attestation_init() {
   r=$(chainloop attestation init -f --remote-state --output json $CR_VALUE 2>&1)
   if [ $? -ne 0 ]; then
     log_error "Chainloop initialization failed: $r"
-    exit 1
+    return 1
   fi
   export CHAINLOOP_ATTESTATION_ID=$(echo $r | grep attestationID | awk -F\" '{print $4}')
   log "Attestation ID: $CHAINLOOP_ATTESTATION_ID"
