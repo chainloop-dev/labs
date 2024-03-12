@@ -1,0 +1,38 @@
+name: Chainloop Attestation Init
+on:
+  workflow_call:
+    inputs:
+      chainloop_version:
+        required: false
+        type: string
+      contract_revision:
+        required: false
+        type: string
+      attestation_name:
+        required: false
+        type: string
+      chainloop_labs_branch:
+        required: false
+        type: string
+        default: main
+    secrets:
+      api_token:
+        required: true
+
+jobs:
+  chainloop-attestation-init:
+    name: Chainloop Attestation Install & Init
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Install Chainloop CLI, Labs and Cosign
+        run: |
+          curl -sfL https://raw.githubusercontent.com/chainloop-dev/labs/test/tools/install_c8l.sh | bash -s -- test chainloop_cli cosign
+          source <(/usr/local/bin/chainloop/c8l source)
+
+      - name: Initialize Attestation
+        run: |
+          source <(/usr/local/bin/chainloop/c8l source)
+          chainloop_attestation_init
+          echo "CHAINLOOP_ATTESTATION_ID=${CHAINLOOP_ATTESTATION_ID}" >> "$GITHUB_ENV"
+

@@ -1,0 +1,91 @@
+name: Chainloop Attestation Process
+on:
+  workflow_call:
+    inputs:
+      chainloop_version:
+        required: false
+        type: string
+      contract_revision:
+        required: false
+        type: string
+      attestation_name:
+        required: false
+        type: string
+      chainloop_labs_branch:
+        required: false
+        type: string
+        default: main
+    secrets:
+      api_token:
+        required: true
+      signing_key:
+        required: true
+      signing_key_password:
+        required: true
+    
+jobs:
+  chainloop-attestation:
+    name: Chainloop Attestation Process
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          sparse-checkout: |
+            .chainloop.yml
+
+      # Download all artifacts and metadata created in previous jobs/steps
+      # to make them available to the attestation process.
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v4
+
+      - name: logs
+        run: source <(/usr/local/bin/chainloop/c8l source) && chainloop_collect_logs_for_github_jobs
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      # Collect all artifacts, reports, and metadata
+      # based on the configuration in .chainloop.yml
+      - name: Add all artifacts, reports, and metadata to attestation.
+        run: |
+          source <(/usr/local/bin/chainloop/c8l source)
+          chainloop_attestation_add_from_yaml ${{ inputs.attestation_name }}
+ 
+      - name: Chainloop Attestation Status
+        run: |
+          source <(/usr/local/bin/chainloop/c8l source)
+          chainloop_attestation_status
+ 
+      - name: Validate Collected Artifacts and Record Attestation
+        if: ${{ success() }}
+        run: |
+          source <(/usr/local/bin/chainloop/c8l source)
+          chainloop_attestation_push
+        env:
+          CHAINLOOP_SIGNING_KEY: ${{ secrets.signing_key }}
+          CHAINLOOP_SIGNING_PASSWORD: ${{ secrets.signing_key_password }}
+  
+      - name: Generate a summary report
+        run: |
+          source <(/usr/local/bin/chainloop/c8l source)
+          chainloop_generate_github_summary
+
+      - name: Mark attestation as failed
+        if: ${{ failure() }}
+        run: |
+          source <(/usr/local/bin/chainloop/c8l source)
+          chainloop attestation reset
+          chainloop_generate_github_summary_on_failure
+          
+      - name: Mark attestation as cancelled
+        if: ${{ cancelled() }}
+        run: |
+          chainloop attestation reset --trigger cancellation
+
+    env:
+      CHAINLOOP_VERSION: ${{ inputs.chainloop_version }}
+      CHAINLOOP_ROBOT_ACCOUNT: ${{ secrets.api_token }}
+      CHAINLOOP_CONTRACT_REVISION: ${{ inputs.contract_revision }}
+      
