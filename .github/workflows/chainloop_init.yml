@@ -17,11 +17,18 @@ on:
         required: true
 
 jobs:
-  chainloop-attestation-init:
+  chainloop-init:
     name: Chainloop Attestation Install & Init
     runs-on: ubuntu-latest
     
     steps:
+      - name: Cache Chainloop binaries
+        uses: actions/cache@v4
+        id: cache-chainloop
+        with:
+          path: .c8l_cache
+          key: c8l-cache-${{ runner.os }}-${{ github.run_id }} 
+
       - name: Install Chainloop CLI, Labs and Cosign
         run: |
           curl -sfL https://raw.githubusercontent.com/chainloop-dev/labs/test/tools/install_c8l.sh | bash -s -- test chainloop_cli cosign
