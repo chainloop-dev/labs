@@ -111,7 +111,7 @@ chainloop_bin_install() {
 # chainloop_bin_cache_in_dir - it takes a path and copy there the CHAINLOOP_BIN_PATH
 chainloop_bin_cache_in_dir() {
   mkdir -p $1
-  cp -r $CHAINLOOP_BIN_PATH $1
+  cp -r $CHAINLOOP_BIN_PATH/* $1
 }
 
 # chainloop_install takes the list of tools and installs them with functions below install_${name}

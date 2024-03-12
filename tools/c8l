@@ -676,7 +676,7 @@ chainloop_bin_install() {
 # chainloop_bin_cache_in_dir - it takes a path and copy there the CHAINLOOP_BIN_PATH
 chainloop_bin_cache_in_dir() {
   mkdir -p $1
-  cp -r $CHAINLOOP_BIN_PATH $1
+  cp -r $CHAINLOOP_BIN_PATH/* $1
 }
 
 # chainloop_install takes the list of tools and installs them with functions below install_${name}
@@ -843,7 +843,7 @@ chainloop_attestation_init() {
   r=$(chainloop attestation init -f --remote-state --output json $CR_VALUE 2>&1)
   if [ $? -ne 0 ]; then
     log_error "Chainloop initialization failed: $r"
-    exit 1
+    return 1
   fi
   export CHAINLOOP_ATTESTATION_ID=$(echo $r | grep attestationID | awk -F\" '{print $4}')
   log "Attestation ID: $CHAINLOOP_ATTESTATION_ID"
