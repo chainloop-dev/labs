@@ -36,6 +36,9 @@ jobs:
         run: |
           source <(.c8l_cache/c8l source)
           chainloop_restore_all_from_cache .c8l_cache
+          echo "CHAINLOOP_ATTESTATION_ID=${CHAINLOOP_ATTESTATION_ID}" >> "$GITHUB_ENV"
+          ls -las .c8l_cache
+          env
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -59,6 +62,8 @@ jobs:
       - name: Add all artifacts, reports, and metadata to attestation.
         run: |
           source <(/usr/local/bin/chainloop/c8l source)
+          ls -las
+          env
           chainloop_attestation_add_from_yaml ${{ inputs.attestation_name }}
  
       - name: Chainloop Attestation Status
