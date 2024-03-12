@@ -676,7 +676,7 @@ chainloop_bin_install() {
       cp $path $CHAINLOOP_BIN_PATH
       chmod +x $CHAINLOOP_BIN_PATH/$(basename $path)
     else
-      log_error "Path $path does not exist"
+      log_error "chainloop_bin_install: path $path does not exist"
       return 1
     fi
   done
@@ -696,7 +696,7 @@ chainloop_recreate_env_from_file() {
   path=$1
   # if the path is empty or does not exist, return
   if [ -z "$path" ] || [ ! -f "$path" ]; then
-    log_error "Path $path does not exist"
+    log_error "chainloop_recreate_env_from_file: path $path does not exist"
     return 1
   fi
   file=$(basename $path)
@@ -749,7 +749,7 @@ chainloop_restore_env_all_from_cache() {
     log_error "Cache directory $cache_dir does not exist"
     return 1
   fi
-  for file in $(ls $cache_dir/.env_*); do
+  for file in $cache_dir/.env_* ; do
     chainloop_recreate_env_from_file $file
   done
 }
