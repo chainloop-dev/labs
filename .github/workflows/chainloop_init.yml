@@ -18,7 +18,7 @@ on:
 
 jobs:
   chainloop-init:
-    name: Chainloop Attestation Install & Init
+    name: Chainloop Install & Attestation Init
     runs-on: ubuntu-latest
     
     steps:
@@ -33,7 +33,6 @@ jobs:
           chainloop_attestation_init
           echo "CHAINLOOP_ATTESTATION_ID=${CHAINLOOP_ATTESTATION_ID}" >> "$GITHUB_ENV"
           chainloop_save_env_to_cache .c8l_cache CHAINLOOP_ATTESTATION_ID
-          ls -asl .c8l_cache
 
       - name: Cache Chainloop binaries
         uses: actions/cache@v4
