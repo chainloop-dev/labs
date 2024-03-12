@@ -22,13 +22,6 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Cache Chainloop binaries
-        uses: actions/cache@v4
-        id: cache-chainloop
-        with:
-          path: .c8l_cache
-          key: c8l-cache-${{ runner.os }}-${{ github.run_id }} 
-
       - name: Install Chainloop CLI, Labs and Cosign
         run: |
           curl -sfL https://raw.githubusercontent.com/chainloop-dev/labs/test/tools/install_c8l.sh | bash -s -- test chainloop_cli cosign
@@ -39,11 +32,15 @@ jobs:
           source <(/usr/local/bin/chainloop/c8l source)
           chainloop_attestation_init
           echo "CHAINLOOP_ATTESTATION_ID=${CHAINLOOP_ATTESTATION_ID}" >> "$GITHUB_ENV"
+          chainloop_save_env_to_cache .c8l_cache CHAINLOOP_ATTESTATION_ID
+
 
       - name: Cache Chainloop binaries
         uses: actions/cache@v4
+        id: cache-chainloop
         with:
           path: .c8l_cache
+          key: c8l-cache-${{ runner.os }}-${{ github.run_id }} 
 
     env:
       CHAINLOOP_VERSION: ${{ inputs.chainloop_version }}

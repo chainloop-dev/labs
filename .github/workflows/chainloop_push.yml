@@ -35,7 +35,7 @@ jobs:
       - name: Restore Chainloop binaries from cache
         run: |
           source <(.c8l_cache/c8l source)
-          chainloop_bin_install .c8l_cache/*
+          chainloop_restore_all_from_cache .c8l_cache
 
       - name: Checkout
         uses: actions/checkout@v4
