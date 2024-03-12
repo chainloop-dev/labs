@@ -749,7 +749,7 @@ chainloop_restore_env_all_from_cache() {
     log_error "Cache directory $cache_dir does not exist"
     return 1
   fi
-  for file in $cache_dir/.env_* ; do
+  for file in $cache_dir/.env_*; do
     chainloop_recreate_env_from_file $file
   done
 }
