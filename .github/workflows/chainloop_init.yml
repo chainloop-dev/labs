@@ -8,9 +8,6 @@ on:
       contract_revision:
         required: false
         type: string
-      attestation_name:
-        required: false
-        type: string
       chainloop_labs_branch:
         required: false
         type: string
@@ -36,3 +33,12 @@ jobs:
           chainloop_attestation_init
           echo "CHAINLOOP_ATTESTATION_ID=${CHAINLOOP_ATTESTATION_ID}" >> "$GITHUB_ENV"
 
+      - name: Cache Chainloop binaries
+        uses: actions/cache@v4
+        with:
+          path: .c8l_cache
+
+    env:
+      CHAINLOOP_VERSION: ${{ inputs.chainloop_version }}
+      CHAINLOOP_ROBOT_ACCOUNT: ${{ secrets.api_token }}
+      CHAINLOOP_CONTRACT_REVISION: ${{ inputs.contract_revision }}
