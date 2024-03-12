@@ -189,17 +189,6 @@ chainloop_restore_env_all_from_cache() {
   done
 }
 
-chainloop_restore_env_all_from_cache() {
-  cache_dir=$1
-  if [ -z "${cache_dir}" ] || [ ! -d "${cache_dir}" ]; then
-    log_error "Cache directory $cache_dir does not exist"
-    return 1
-  fi
-  for file in $(ls $cache_dir/.env_*); do
-    chainloop_recreate_env_from_file $file
-  done
-}
-
 # chainloop_restore_all_from_cache - it restores the env variables and the tools from the cache
 # it takes the cache directory as the first parameter and validates if it exists and is a directory
 chainloop_restore_all_from_cache() {
@@ -209,7 +198,7 @@ chainloop_restore_all_from_cache() {
     return 1
   fi
   chainloop_restore_env_all_from_cache $cache_dir
-  chainloop_bin_install $(ls $cache_dir)
+  chainloop_bin_install $cache_dir/*
 }
 
 ###
