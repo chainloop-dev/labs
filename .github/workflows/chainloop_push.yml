@@ -34,6 +34,7 @@ jobs:
 
       - name: Restore Chainloop binaries from cache
         run: |
+          ls -asl .c8l_cache
           source <(.c8l_cache/c8l source)
           chainloop_restore_all_from_cache .c8l_cache
 
