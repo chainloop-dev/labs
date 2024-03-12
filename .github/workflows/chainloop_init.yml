@@ -31,7 +31,6 @@ jobs:
         run: |
           source <(/usr/local/bin/chainloop/c8l source)
           chainloop_attestation_init
-          echo "CHAINLOOP_ATTESTATION_ID=${CHAINLOOP_ATTESTATION_ID}" >> "$GITHUB_ENV"
           chainloop_save_env_to_cache .c8l_cache CHAINLOOP_ATTESTATION_ID
 
       - name: Cache Chainloop binaries
