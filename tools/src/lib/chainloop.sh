@@ -277,7 +277,7 @@ chainloop_attestation_init() {
   if [ -n "${CHAINLOOP_CONTRACT_REVISION}" ]; then
     CR_VALUE="--contract-revision ${CHAINLOOP_CONTRACT_REVISION}"
   fi
-  r=$(chainloop attestation init -f --remote-state --output json $CR_VALUE 2>&1)
+  r=$(chainloop attestation init -f --remote-state --output json $CR_VALUE)
   if [ $? -ne 0 ]; then
     log_error "Chainloop initialization failed: $r"
     return 1
