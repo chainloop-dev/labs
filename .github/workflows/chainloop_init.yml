@@ -1,0 +1,46 @@
+name: Chainloop Attestation Init
+on:
+  workflow_call:
+    inputs:
+      chainloop_version:
+        required: false
+        type: string
+      contract_revision:
+        required: false
+        type: string
+      chainloop_labs_branch:
+        required: false
+        type: string
+        default: main
+    secrets:
+      api_token:
+        required: true
+
+jobs:
+  chainloop-init:
+    name: Chainloop Install & Attestation Init
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Install Chainloop CLI, Labs and Cosign
+        run: |
+          curl -sfL https://raw.githubusercontent.com/chainloop-dev/labs/test/tools/install_c8l.sh | bash -s -- test chainloop_cli cosign
+          source <(/usr/local/bin/chainloop/c8l source)
+
+      - name: Initialize Attestation
+        run: |
+          source <(/usr/local/bin/chainloop/c8l source)
+          chainloop_attestation_init
+          chainloop_save_env_to_cache .c8l_cache CHAINLOOP_ATTESTATION_ID
+
+      - name: Cache Chainloop binaries
+        uses: actions/cache@v4
+        id: cache-chainloop
+        with:
+          path: .c8l_cache
+          key: c8l-cache-${{ runner.os }}-${{ github.run_id }} 
+
+    env:
+      CHAINLOOP_VERSION: ${{ inputs.chainloop_version }}
+      CHAINLOOP_ROBOT_ACCOUNT: ${{ secrets.api_token }}
+      CHAINLOOP_CONTRACT_REVISION: ${{ inputs.contract_revision }}

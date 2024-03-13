@@ -5,9 +5,6 @@ on:
       chainloop_version:
         required: false
         type: string
-      contract_revision:
-        required: false
-        type: string
       attestation_name:
         required: false
         type: string
@@ -27,8 +24,20 @@ jobs:
   chainloop-attestation:
     name: Chainloop Attestation Process
     runs-on: ubuntu-latest
-    
     steps:
+      - name: Cache Chainloop binaries
+        uses: actions/cache@v4
+        id: cache-chainloop
+        with:
+          path: .c8l_cache
+          key: c8l-cache-${{ runner.os }}-${{ github.run_id }} 
+
+      - name: Restore Chainloop binaries from cache
+        run: |
+          source <(.c8l_cache/c8l source)
+          chainloop_restore_all_from_cache .c8l_cache
+          echo "CHAINLOOP_ATTESTATION_ID=${CHAINLOOP_ATTESTATION_ID}" >> "$GITHUB_ENV"
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -36,24 +45,10 @@ jobs:
           sparse-checkout: |
             .chainloop.yml
 
-      - name: Install Chainloop CLI, Labs and Cosign
-        run: |
-          # TODO: add checksum verification
-          curl -o c8l https://raw.githubusercontent.com/chainloop-dev/labs/${{ inputs.chainloop_labs_branch }}/tools/c8l
-          chmod +x c8l; source <(./c8l source)
-          chainloop_bin_install c8l
-          chainloop_install chainloop_cli cosign
-
       # Download all artifacts and metadata created in previous jobs/steps
       # to make them available to the attestation process.
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v4
-
-      - name: Initialize Attestation
-        run: |
-          source <(/usr/local/bin/chainloop/c8l source)
-          chainloop_attestation_init
-          echo "CHAINLOOP_ATTESTATION_ID=${CHAINLOOP_ATTESTATION_ID}" >> "$GITHUB_ENV"
 
       - name: logs
         run: source <(/usr/local/bin/chainloop/c8l source) && chainloop_collect_logs_for_github_jobs
