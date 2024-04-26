@@ -85,13 +85,13 @@ jobs:
         if: ${{ failure() }}
         run: |
           source <(/usr/local/bin/chainloop/c8l source)
-          chainloop attestation reset --attestation-id ${CHAINLOOP_ATTESTATION_ID}
+          chainloop attestation reset --remote-state --attestation-id ${CHAINLOOP_ATTESTATION_ID}
           chainloop_generate_github_summary_on_failure
           
       - name: Mark attestation as cancelled
         if: ${{ cancelled() }}
         run: |
-          chainloop attestation reset --trigger cancellation --attestation-id ${CHAINLOOP_ATTESTATION_ID}
+          chainloop attestation reset --trigger cancellation --remote-state --attestation-id ${CHAINLOOP_ATTESTATION_ID}
 
     env:
       CHAINLOOP_VERSION: ${{ inputs.chainloop_version }}
