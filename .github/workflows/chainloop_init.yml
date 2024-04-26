@@ -27,6 +27,13 @@ jobs:
           curl -sfL https://raw.githubusercontent.com/chainloop-dev/labs/${{ inputs.chainloop_labs_branch }}/tools/install_c8l.sh | bash -s -- ${{ inputs.chainloop_labs_branch }} chainloop_cli cosign
           source <(/usr/local/bin/chainloop/c8l source)
 
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+          sparse-checkout: |
+            .git
+
       - name: Initialize Attestation
         run: |
           source <(/usr/local/bin/chainloop/c8l source)
