@@ -8,6 +8,7 @@ on:
       contract_root_folder:
         required: true
         type: string
+        default: .github/workflows/contracts
     secrets:
       api_token:
         required: true
