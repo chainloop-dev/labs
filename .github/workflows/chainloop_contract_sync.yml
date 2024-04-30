@@ -1,4 +1,4 @@
-name: Chainloop Contact Sync
+name: Chainloop Contract Sync
 on:
   workflow_call:
     inputs:
