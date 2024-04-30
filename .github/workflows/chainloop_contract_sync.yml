@@ -6,7 +6,7 @@ on:
         required: false
         type: string
       contract_root_folder:
-        required: true
+        required: false
         type: string
         default: .github/workflows/contracts
     secrets:
