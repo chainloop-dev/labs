@@ -1,0 +1,42 @@
+name: Chainloop Contact Sync
+on:
+  workflow_call:
+    inputs:
+      chainloop_version:
+        required: false
+        type: string
+      contract_root_folder:
+        required: true
+        type: string
+    secrets:
+      api_token:
+        required: true
+
+jobs:
+  chainloop_contract_sync:
+    name: Chainloop Install
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Chainloop
+        run: |
+          curl -sfL https://raw.githubusercontent.com/chainloop-dev/chainloop/01ad13af08950b7bfbc83569bea207aeb4e1a285/docs/static/install.sh | bash -s -- --version v${{ env.CHAINLOOP_VERSION }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v4.1.4
+        with:
+          fetch-depth: 0
+
+      - name: Update contracts ${{ inputs.contract_root_folder }} on Chainloop
+        run: |
+            for file in $(ls ${{ inputs.contract_root_folder }}); do
+                if [[ $file = *.yml || $file = *.yaml ]]; then
+                    contract_name=$(basename $file | cut -d'.' -f1)
+                    echo "Updating contract $contract_name with ${{ inputs.contract_root_folder }}/$file"
+                    chainloop wf contract update --name $contract_name --contract ${{ inputs.contract_root_folder }}/$file
+                fi
+            done
+
+    env:
+      CHAINLOOP_VERSION: ${{ inputs.chainloop_version }}
+      CHAINLOOP_API_TOKEN: ${{ secrets.api_token }}
