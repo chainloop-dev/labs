@@ -2,9 +2,8 @@ on:
   workflow_call:
     inputs:
       project:
-        description: The project this workflow belongs to.
+        description: "The project this workflow belongs to. default: repository name"
         type: string
-        required: true
       workflow_name:
         description: "The workflow name. default: parent workflow filename"
         type: string
@@ -46,4 +45,8 @@ jobs:
           WORKFLOW_NAME: ${{ steps.set_workflow_name.outputs.workflow_name }}
         run: |
           echo "Creating '$WORKFLOW_NAME' chainloop workflow"
-          chainloop --token ${{ secrets.api_token }} wf create --name "$WORKFLOW_NAME" --project "${{ inputs.project }}" >&2 || echo -n "Workflow already exists"
+          project=${{ inputs.project }}
+          if [[ "$project" = "" ]]; then
+            project=$(echo -n ${{github.repositoryUrl}} | rev | cut -d'/' -f1 | rev | sed 's/.git$//g')
+          fi
+          chainloop --token ${{ secrets.api_token }} wf create --name "$WORKFLOW_NAME" --project "$project" >&2 || echo -n "Workflow already exists"
