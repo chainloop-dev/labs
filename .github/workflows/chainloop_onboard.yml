@@ -2,14 +2,15 @@ on:
   workflow_call:
     inputs:
       project:
-        description: The chainloop project, usually matching a project or team within the organization
+        description: The project this workflow belongs to.
         type: string
         required: true
       workflow_name:
-        description: The workflow name. It will use the parent github workflow file name if not provided.
+        description: "The workflow name. default: parent workflow filename"
         type: string
     secrets:
       api_token:
+        description: "Reference: https://docs.chainloop.dev/reference/operator/api-tokens#api-tokens"
         required: true
     outputs:
       workflow_name:
@@ -44,6 +45,5 @@ jobs:
         env:
           WORKFLOW_NAME: ${{ steps.set_workflow_name.outputs.workflow_name }}
         run: |
-          echo "Creating '$WORKFLOW_NAME' chainloop workflow" 
-          chainloop --token ${{ secrets.api_token }} wf describe --name "$WORKFLOW_NAME" || \
-            chainloop --token ${{ secrets.api_token }} wf create --name "$WORKFLOW_NAME" --project "${{ inputs.project }}"
+          echo "Creating '$WORKFLOW_NAME' chainloop workflow"
+          chainloop --token ${{ secrets.api_token }} wf create --name "$WORKFLOW_NAME" --project "${{ inputs.project }}" >&2 || echo -n "Workflow already exists"
