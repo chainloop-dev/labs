@@ -1,0 +1,52 @@
+on:
+  workflow_call:
+    inputs:
+      project:
+        description: "The project this workflow belongs to. default: repository name"
+        type: string
+      workflow_name:
+        description: "The workflow name. default: parent workflow filename"
+        type: string
+    secrets:
+      api_token:
+        description: "Reference: https://docs.chainloop.dev/reference/operator/api-tokens#api-tokens"
+        required: true
+    outputs:
+      workflow_name:
+        description: The discovered or created Chainloop workflow
+        value: ${{ jobs.chainloop_onboard.outputs.workflow_name }}
+
+jobs:
+  chainloop_onboard:
+    name: Automatic Chainloop onboarding flow from Github Actions
+    runs-on: ubuntu-latest
+    outputs:
+      workflow_name: ${{ steps.set_workflow_name.outputs.workflow_name }}
+
+    steps:
+      - name: Install Chainloop
+        run: |
+          curl -sfL https://docs.chainloop.dev/install.sh | bash -s
+
+      - id: set_workflow_name
+        name: Set workflow name
+        env:
+          # contains full path to the parent workflow (.github/workflows/parent_workflow.yml)
+          PARENT_WORKFLOW: ${{ github.workflow }}
+        run: |
+          workflow_name=${{ inputs.workflow_name }}
+          if [[ "$workflow_name" = "" ]]; then
+            workflow_name=$(basename "$PARENT_WORKFLOW" | sed "s/\..*$//g")
+          fi
+          echo "workflow_name=$workflow_name" >> $GITHUB_OUTPUT
+
+      - name: Discover and create workflow
+        env:
+          WORKFLOW_NAME: ${{ steps.set_workflow_name.outputs.workflow_name }}
+        run: |
+          echo "Creating '$WORKFLOW_NAME' chainloop workflow"
+          project=${{ inputs.project }}
+          if [[ "$project" = "" ]]; then
+            project=$(echo -n ${{github.repositoryUrl}} | rev | cut -d'/' -f1 | rev | sed 's/.git$//g')
+          fi
+          chainloop --token ${{ secrets.api_token }} wf create --name "$WORKFLOW_NAME" --project "$project" >&2 || echo -n "Workflow already exists"
