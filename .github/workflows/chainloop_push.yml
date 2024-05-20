@@ -62,11 +62,6 @@ jobs:
           source <(/usr/local/bin/chainloop/c8l source)
           chainloop_attestation_add_from_yaml ${{ inputs.attestation_name }}
  
-      - name: Chainloop Attestation Status
-        run: |
-          source <(/usr/local/bin/chainloop/c8l source)
-          chainloop_attestation_status
- 
       - name: Validate Collected Artifacts and Record Attestation
         if: ${{ success() }}
         run: |
