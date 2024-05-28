@@ -40,4 +40,4 @@ jobs:
 
     env:
       CHAINLOOP_VERSION: ${{ inputs.chainloop_version }}
-      CHAINLOOP_API_TOKEN: ${{ secrets.api_token }}
+      CHAINLOOP_TOKEN: ${{ secrets.api_token }}
