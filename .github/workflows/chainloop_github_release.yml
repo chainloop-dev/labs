@@ -61,6 +61,8 @@ jobs:
       - name: Attest all assets
         run: |
           tag=$(echo -n ${{github.ref}} | cut -d / -f3)
+          # gh release download raises an error if there are not assets on the release
+          # that makes the workflow fail, so we use `|| true` to avoid that
           gh release download $tag -D /tmp/github-release || true
           
           for entry in $(ls /tmp/github-release); do
