@@ -25,6 +25,10 @@ on:
         description: "The password for the private key used to sign the attestation"
         required: true
 
+# Write permissions on contents since we are updating the release notes
+permissions:
+  contents: write
+
 jobs:
   onboard_workflow:
     name: Onboard Chainloop Workflow
@@ -60,17 +64,16 @@ jobs:
 
       - name: Attest all assets
         run: |
-          tag=$(echo -n ${{github.ref}} | cut -d / -f3)
           # gh release download raises an error if there are not assets on the release
           # that makes the workflow fail, so we use `|| true` to avoid that
-          gh release download $tag -D /tmp/github-release || true
+          gh release download ${{github.ref_name}} -D /tmp/github-release || true
           
           for entry in $(ls /tmp/github-release); do
             chainloop attestation add --value "/tmp/github-release/$entry"
           done
 
           # Include source code
-          gh release download $tag -A tar.gz -O /tmp/github-release/source-code.tar.gz
+          gh release download ${{github.ref_name}} -A tar.gz -O /tmp/github-release/source-code.tar.gz
           chainloop attestation add --value "/tmp/github-release/source-code.tar.gz"
 
           # Add additional materials if provided
@@ -104,9 +107,8 @@ jobs:
       - name: Add attestation link to release notes
         if: ${{ success() }}
         run: |
-          tag=$(echo -n ${{github.ref}} | cut -d / -f3)
           chainloop_release_url="## Chainloop Attestation"$'\n'"[View the attestation of this release](https://app.chainloop.dev/attestation/${{ steps.attestation-push.outputs.attestation_sha }})"
-          current_notes=$(gh release view $tag --json body -q '.body')
+          current_notes=$(gh release view ${{github.ref_name}} --json body -q '.body')
 
           if echo "$current_notes" | grep -q "## Chainloop Attestation"; then
             # Replace the existing Chainloop Attestation section with the new URL
@@ -116,4 +118,4 @@ jobs:
             modified_notes="$chainloop_release_url"$'\n\n'"$current_notes"
           fi
 
-          gh release edit $tag -n "$modified_notes"
+          gh release edit ${{github.ref_name}} -n "$modified_notes"
