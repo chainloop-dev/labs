@@ -25,10 +25,6 @@ on:
         description: "The password for the private key used to sign the attestation"
         required: true
 
-# Write permissions on contents since we are updating the release notes
-permissions:
-  contents: write
-
 jobs:
   onboard_workflow:
     name: Onboard Chainloop Workflow
@@ -118,4 +114,5 @@ jobs:
             modified_notes="$chainloop_release_url"$'\n\n'"$current_notes"
           fi
 
-          gh release edit ${{github.ref_name}} -n "$modified_notes"
+          # Try to update the release notes with the attestation link. If we don't have enough permissions, we skip it
+          gh release edit ${{github.ref_name}} -n "$modified_notes" || echo -n "No enough permissions to update the release notes. Skipping..."
