@@ -2,6 +2,8 @@
 # It uses the Chainloop CLI to create an attestation for the release assets, source code and additional materials if provided.
 # The attestation is then pushed to the Chainloop service and the attestation link is added to the release notes.
 # Prior to running this workflow, the Chainloop workflow is onboarded if it does not exist.
+# By default, the permission is contents:read to download the release assets. If you want the release notes
+# to be updated with the attestation link, modify it to contents:write.
 on:
   workflow_call:
     inputs:
@@ -24,10 +26,6 @@ on:
       cosign_password:
         description: "The password for the private key used to sign the attestation"
         required: true
-
-# Write permissions on contents since we are updating the release notes
-permissions:
-  contents: write
 
 jobs:
   onboard_workflow:
@@ -118,4 +116,5 @@ jobs:
             modified_notes="$chainloop_release_url"$'\n\n'"$current_notes"
           fi
 
-          gh release edit ${{github.ref_name}} -n "$modified_notes"
+          # Try to update the release notes with the attestation link. If we don't have enough permissions, we skip it
+          gh release edit ${{github.ref_name}} -n "$modified_notes" || echo -n "No enough permissions to update the release notes. Skipping..."
