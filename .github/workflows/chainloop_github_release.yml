@@ -1,0 +1,118 @@
+# Description: This workflow is used to record a release in Chainloop. It is triggered when a release is published on GitHub.
+# It uses the Chainloop CLI to create an attestation for the release assets, source code and additional materials if provided.
+# The attestation is then pushed to the Chainloop service and the attestation link is added to the release notes.
+# Prior to running this workflow, the Chainloop workflow is onboarded if it does not exist.
+on:
+  workflow_call:
+    inputs:
+      project:
+        description: "The project this workflow belongs to. default: repository name"
+        type: string
+      workflow_name:
+        description: "The workflow name. default: parent workflow filename"
+        type: string
+      additional_materials:
+        description: "Additional materials to be attested. Commas separated list of values"
+        type: string
+    secrets:
+      api_token:
+        description: "Reference: https://docs.chainloop.dev/reference/operator/api-tokens#api-tokens"
+        required: true
+      cosign_key:
+        description: "The private key used to sign the attestation"
+        required: true
+      cosign_password:
+        description: "The password for the private key used to sign the attestation"
+        required: true
+
+jobs:
+  onboard_workflow:
+    name: Onboard Chainloop Workflow
+    uses: chainloop-dev/labs/.github/workflows/chainloop_onboard.yml@4173e015dbd5dc2a8802555c268da63d57bbe576
+    if: github.event_name == 'release' && github.event.action == 'published'
+    with:
+      project: ${{ inputs.workflow_project }}
+      workflow_name: ${{ inputs.workflow_name }}
+    # Pass parent workflow secrets to the child workflow
+    secrets: inherit
+
+  release:
+    name: Record release from GitHub
+    runs-on: ubuntu-latest
+    needs: onboard_workflow
+    # Only run this job when a release is published
+    if: github.event_name == 'release' && github.event.action == 'published'
+    env:
+      CHAINLOOP_WORKFLOW_NAME: ${{ needs.onboard_workflow.outputs.workflow_name }}
+      CHAINLOOP_TOKEN: ${{ secrets.api_token }}
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Install Chainloop
+        run: |
+          curl -sfL https://docs.chainloop.dev/install.sh | bash -s
+
+      - name: Initialize Attestation
+        run: |
+          chainloop attestation init --workflow-name ${CHAINLOOP_WORKFLOW_NAME}
+
+      - name: Attest all assets
+        run: |
+          tag=$(echo -n ${{github.ref}} | cut -d / -f3)
+          # gh release download raises an error if there are not assets on the release
+          # that makes the workflow fail, so we use `|| true` to avoid that
+          gh release download $tag -D /tmp/github-release || true
+          
+          for entry in $(ls /tmp/github-release); do
+            chainloop attestation add --value "/tmp/github-release/$entry"
+          done
+
+          # Include source code
+          gh release download $tag -A tar.gz -O /tmp/github-release/source-code.tar.gz
+          chainloop attestation add --value "/tmp/github-release/source-code.tar.gz"
+
+          # Add additional materials if provided
+          if [[ -n "${{ inputs.additional_materials }}" ]]; then
+            for material in $(echo "${{ inputs.additional_materials }}" | tr ',' '\n'); do
+              chainloop attestation add --value "$material"
+            done
+          fi
+
+      - name: Finish and Record Attestation
+        id: attestation-push
+        if: ${{ success() }}
+        run: |
+          chainloop attestation status --full
+          attestation_sha=$(chainloop attestation push --key env://CHAINLOOP_SIGNING_KEY -o json | jq -r '.digest')
+          echo "attestation_sha=$attestation_sha" >> $GITHUB_OUTPUT
+        env:
+          CHAINLOOP_SIGNING_PASSWORD: ${{ secrets.cosign_password }}
+          CHAINLOOP_SIGNING_KEY: ${{ secrets.cosign_key }}
+
+      - name: Mark attestation as failed
+        if: ${{ failure() }}
+        run: |
+          chainloop attestation reset
+
+      - name: Mark attestation as cancelled
+        if: ${{ cancelled() }}
+        run: |
+          chainloop attestation reset --trigger cancellation
+
+      - name: Add attestation link to release notes
+        if: ${{ success() }}
+        run: |
+          chainloop_release_url="## Chainloop Attestation"$'\n'"[View the attestation of this release](https://app.chainloop.dev/attestation/${{ steps.attestation-push.outputs.attestation_sha }})"
+          current_notes=$(gh release view ${{ github.ref }} --json body -q '.body')
+
+          if echo "$current_notes" | grep -q "## Chainloop Attestation"; then
+            # Replace the existing Chainloop Attestation section with the new URL
+            modified_notes=$(echo "$current_notes" | sed -E "s|## Chainloop Attestation[^\n]*\n\[View the attestation of this release\]\(https://app\.chainloop\.dev/attestation/[^\)]*\)|$chainloop_release_url|")
+          else
+            # Add the Chainloop Attestation section to the top
+            modified_notes="$chainloop_release_url"$'\n\n'"$current_notes"
+          fi
+
+          gh release edit ${{ github.ref }} -n "$modified_notes"
