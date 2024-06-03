@@ -1,20 +1,51 @@
-data_path=/tmp/chainloop/data
-mkdir -p "$data_path"
+export CHAINLOOP_BIN_PATH="${CHAINLOOP_BIN_PATH:-/usr/local/bin/chainloop}"
 
-store_attestation_uuid() {
-    sha256="$1"
-    uuid="$2"
-    name="$3"
-    mkdir -p "${data_path}/$sha256"
-    echo "$uuid $name" >> "${data_path}/$sha256/uuids.txt"
+is_chainloop_in_path() {
+  if command -v chainloop &>/dev/null; then
+    # we are good
+    return 0
+  else
+    log "chainloop is not in PATH, install it."
+    return 1
+  fi
 }
 
-get_attestations_uuids() {
-    sha256="$1"
-    if [[ -f "${data_path}/$sha256/uuids.txt" ]]; then
-        cat "${data_path}/$sha256/uuids.txt"
-    else
-        echo "No attestations found for SHA256: $sha256"
-    fi
+validate_env() {
+  is_chainloop_in_path
+  if [ ! $? ]; then
+    exit 1
+  fi
 }
 
+t=$(date "+%Y%m%d%H%M%S")
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+CHAINLOOP_TMP_DIR="${CHAINLOOP_TMP_DIR:-${script_dir}/tmp/chainloop}"
+
+l() {
+  yellow "$*"
+}
+
+log() {
+  # echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*"
+  yellow "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*"
+}
+
+log_error() {
+  red_bold "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*"
+}
+
+log_header() {
+  blue_bold "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*"
+}
+
+prepare_tmp_file() {
+  tmp_dir="${CHAINLOOP_TMP_DIR}"
+  file_name=$1
+  mkdir -p "${tmp_dir}"
+  t="${tmp_dir}/${file_name}"
+  if [ -f $t ]; then
+    echo "Temporary file file $t already exists"
+    return 1
+  fi
+  echo $t
+}

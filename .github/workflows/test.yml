@@ -1,0 +1,53 @@
+name: Test and lint
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  test_and_lint:
+    name: Test and lint
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        key:
+          - test
+          - lint
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: ${{ matrix.key }}
+        run: make -C tools ${{ matrix.key }}
+  
+  test_build:
+    name: Test if script generation works
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          working-directory: tools
+          bundler-cache: true
+      - name: Generate a new script and compare it with the original
+        run: |
+          cd tools
+          find ./vendor/bundle
+          mv c8l c8l.bak
+          make build
+          # compare the generated script with the original and fail if they differ
+          diff c8l c8l.bak
+          if [ $? -ne 0 ]; then
+            echo "Generated script differs from the original"
+            exit 1
+          fi

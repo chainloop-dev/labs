@@ -1,6 +1,3 @@
-## Color functions [@bashly-upgrade colors]
-## This file is a part of Bashly standard library
-##
 ## Usage:
 ## Use any of the functions below to color or format a portion of a string.
 ##
@@ -40,3 +37,5 @@ yellow_underlined() { print_in_color "\e[4;33m" "$*"; }
 blue_underlined() { print_in_color "\e[4;34m" "$*"; }
 magenta_underlined() { print_in_color "\e[4;35m" "$*"; }
 cyan_underlined() { print_in_color "\e[4;36m" "$*"; }
+
+###
