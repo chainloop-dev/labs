@@ -13,6 +13,9 @@ test:
 test_on_alpine:
 	docker run --rm -it -w /code -v "${PWD}:/code" chainguard/bash "./test/bats/bin/bats --print-output-on-failure test"
 
+test_shell:
+	docker run --rm -it -w /code -v "${PWD}:/code" node bash 
+
 .PHONY: lint
 # lint
 lint:

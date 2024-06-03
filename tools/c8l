@@ -1083,7 +1083,6 @@ c8l_inspect_command() {
 }
 
 c8l_source_command() {
-  validate_env
   source_chainloop_labs
 
 }

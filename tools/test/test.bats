@@ -7,8 +7,8 @@ setup() {
     load 'test_helper/bats-assert/load'
     load 'test_helper/bats-file/load'
 
-    DIR="$( cd "$( dirname "$BATS_TEST_FILENAME" )" >/dev/null 2>&1 && pwd )"
-    PATH="$DIR/../:$PATH" 
+    DIR="$( cd "$( dirname "${BATS_TEST_FILENAME}" )/.." >/dev/null 2>&1 && pwd )"
+    PATH="$DIR/:$PATH" 
 }
 
 @test "can run c8l script" {
@@ -37,7 +37,8 @@ setup() {
 ### Integration tests
 # TODO: move to integration tests
 @test "can run c8l_install.sh" {
-   run bash ./install_c8l.sh main chainloop_cli cosign
+   cd /tmp
+   run bash $DIR/install_c8l.sh main chainloop_cli cosign
    assert_success
 }
 
