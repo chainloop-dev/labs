@@ -16,12 +16,12 @@ docker_test_on_ubuntu:
 docker_test_on_alpine:
 	docker run --rm -it -w /code -v "${PWD}:/code" chainguard/bash "./test/bats/bin/bats --print-output-on-failure test"
 
-docker_test_on_amazonlinux:
-	docker run --rm -it -w /code -v "${PWD}:/code" amazonlinux:latest bash -c "yum install -y git && git clone
+docker_test_on_ubi:
+	docker run --rm -it -w /code -v "${PWD}:/code" redhat/ubi9 ./test/bats/bin/bats --print-output-on-failure test
 
 docker_test: docker_test_on_ubuntu
 
-docker_test_all: docker_test_on_ubuntu docker_test_on_alpine docker_test_on_amazonlinux
+docker_test_all: docker_test_on_ubuntu docker_test_on_alpine docker_test_on_ubi
 
 docker_test_shell:
 	docker run --rm -it -w /code -v "${PWD}:/code" node bash 
