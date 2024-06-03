@@ -1,0 +1,39 @@
+name: Test and lint
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  build_and_test:
+    name: Test and lint
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        key:
+          - test
+          - test_on_alpine
+          - lint
+
+    steps:
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+      - name: ${{ matrix.key }}
+        run: make -C tools ${{ matrix.  key }}
+      - name: Generate a new script and compare it with the original
+        run: |
+          mv tools/c8l tools/c8l.bak
+          make -C tools generate
+          # compare the generated script with the original and fail if they differ
+          diff tools/c8l tools/c8l.bak
+          if [ $? -ne 0 ]; then
+            echo "Generated script differs from the original"
+            exit 1
+          fi
