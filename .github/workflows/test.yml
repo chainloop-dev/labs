@@ -34,11 +34,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
       - name: Generate a new script and compare it with the original
         run: |
-          sudo apt -y update
-          sudo apt -y install build-essential libyaml-dev ruby ruby-dev
-          sudo gem install bundler
           cd tools
           sudo bundle install
           mv c8l c8l.bak
