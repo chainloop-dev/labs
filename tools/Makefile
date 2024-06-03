@@ -3,7 +3,7 @@ VERSION=$(shell git describe --tags --always)
 .PHONY: build
 # build
 build:
-	bashly generate -e production
+	bundle exec bashly generate -e production
   
 .PHONY: test
 # test
