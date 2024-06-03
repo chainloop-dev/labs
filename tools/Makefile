@@ -8,12 +8,15 @@ build:
 .PHONY: test
 # test
 test:
+	./test/bats/bin/bats --print-output-on-failure test 
+
+docker_test:
 	docker run --rm -it -w /code -v "${PWD}:/code" node ./test/bats/bin/bats --print-output-on-failure test 
 
-test_on_alpine:
+docker_test_on_alpine:
 	docker run --rm -it -w /code -v "${PWD}:/code" chainguard/bash "./test/bats/bin/bats --print-output-on-failure test"
 
-test_shell:
+docker_test_shell:
 	docker run --rm -it -w /code -v "${PWD}:/code" node bash 
 
 .PHONY: lint

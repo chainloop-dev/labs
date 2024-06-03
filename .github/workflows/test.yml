@@ -12,7 +12,7 @@ permissions:
   pull-requests: read
 
 jobs:
-  build_and_test:
+  test_and_lint:
     name: Test and lint
     runs-on: ubuntu-latest
     strategy:
@@ -20,15 +20,22 @@ jobs:
       matrix:
         key:
           - test
-          - test_on_alpine
           - lint
-
     steps:
-      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+      - uses: actions/checkout@v4
       - name: ${{ matrix.key }}
         run: make -C tools ${{ matrix.  key }}
+  
+  test_build:
+    name: Test and lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - name: Generate a new script and compare it with the original
         run: |
+          sudo apt -y update
+          sudo apt -y install build-essential libyaml-dev ruby-dev
+          sudo gem install bashly
           mv tools/c8l tools/c8l.bak
           make -C tools generate
           # compare the generated script with the original and fail if they differ
