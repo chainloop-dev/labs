@@ -38,7 +38,7 @@ jobs:
         run: |
           sudo apt -y update
           sudo apt -y install build-essential libyaml-dev ruby ruby-dev
-          gem install bundler
+          sudo gem install bundler
           cd tools
 
           mv c8l c8l.bak
