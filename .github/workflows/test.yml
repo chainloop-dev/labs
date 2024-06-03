@@ -37,12 +37,14 @@ jobs:
       - name: Generate a new script and compare it with the original
         run: |
           sudo apt -y update
-          sudo apt -y install build-essential libyaml-dev ruby-dev
-          sudo gem install bashly
-          mv tools/c8l tools/c8l.bak
-          make -C tools build
+          sudo apt -y install build-essential libyaml-dev ruby ruby-dev
+          gem install bundler
+          cd tools
+
+          mv c8l c8l.bak
+          make build
           # compare the generated script with the original and fail if they differ
-          diff tools/c8l tools/c8l.bak
+          diff c8l c8l.bak
           if [ $? -ne 0 ]; then
             echo "Generated script differs from the original"
             exit 1
