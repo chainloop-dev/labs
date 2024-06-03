@@ -23,11 +23,14 @@ jobs:
           - lint
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
       - name: ${{ matrix.key }}
-        run: make -C tools ${{ matrix.  key }}
+        run: make -C tools ${{ matrix.key }}
   
   test_build:
-    name: Test and lint
+    name: Test if script generation works
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,7 +40,7 @@ jobs:
           sudo apt -y install build-essential libyaml-dev ruby-dev
           sudo gem install bashly
           mv tools/c8l tools/c8l.bak
-          make -C tools generate
+          make -C tools build
           # compare the generated script with the original and fail if they differ
           diff tools/c8l tools/c8l.bak
           if [ $? -ne 0 ]; then
