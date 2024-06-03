@@ -40,7 +40,7 @@ jobs:
           sudo apt -y install build-essential libyaml-dev ruby ruby-dev
           sudo gem install bundler
           cd tools
-          bundle install
+          sudo bundle install
           mv c8l c8l.bak
           make build
           # compare the generated script with the original and fail if they differ
