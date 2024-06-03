@@ -41,6 +41,7 @@ jobs:
           bundler-cache: true
       - name: Generate a new script and compare it with the original
         run: |
+          cd tools
           mv c8l c8l.bak
           make build
           # compare the generated script with the original and fail if they differ
