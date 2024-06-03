@@ -42,6 +42,7 @@ jobs:
       - name: Generate a new script and compare it with the original
         run: |
           cd tools
+          find ./vendor/bundle
           mv c8l c8l.bak
           make build
           # compare the generated script with the original and fail if they differ
