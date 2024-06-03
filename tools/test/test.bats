@@ -33,6 +33,12 @@ setup() {
     # assert_line --index 0 --regexp ".*chainloop is not in PATH.*"
 }
 
+@test "can install chainloop cli using install_chainloop_cli" {
+    run "sha256sum --help"
+    run bash -c "source <(./c8l source) > /dev/null; chainloop_install chainloop_cli"
+    assert_success
+}
+
 ###
 ### Integration tests
 # TODO: move to integration tests
