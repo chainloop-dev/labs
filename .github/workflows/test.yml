@@ -37,10 +37,10 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.3'
+          working-directory: tools
+          bundler-cache: true
       - name: Generate a new script and compare it with the original
         run: |
-          cd tools
-          sudo bundle install
           mv c8l c8l.bak
           make build
           # compare the generated script with the original and fail if they differ
