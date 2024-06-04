@@ -49,5 +49,5 @@ jobs:
 
     env:
       CHAINLOOP_VERSION: ${{ inputs.chainloop_version }}
-      CHAINLOOP_ROBOT_ACCOUNT: ${{ secrets.api_token }}
+      CHAINLOOP_TOKEN: ${{ secrets.api_token }}
       CHAINLOOP_CONTRACT_REVISION: ${{ inputs.contract_revision }}
