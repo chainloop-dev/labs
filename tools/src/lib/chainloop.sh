@@ -1,21 +1,3 @@
-validate_chainloop_required_env_vars() {
-  if [ -z "${CHAINLOOP_ROBOT_ACCOUNT}" ]; then
-    log_error "CHAINLOOP_ROBOT_ACCOUNT is not set"
-    return 1
-  fi
-  if [ -z "${CHAINLOOP_VERSION+x}" ]; then
-    CHAINLOOP_VERSION=""
-  fi
-  if [ -z "${CHAINLOOP_SIGNING_KEY}" ]; then
-    log_error "CHAINLOOP_SIGNING_KEY is not set"
-    return 1
-  fi
-  if [[ -z "${CHAINLOOP_SIGNING_PASSWORD+x}" ]]; then
-    log_error "CHAINLOOP_SIGNING_PASSWORD is not set"
-    return 1
-  fi
-}
-
 install_chainloop_labs() {
   mkdir -p ${CHAINLOOP_TMP_DIR}
   branch=${1:-main}
