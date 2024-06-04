@@ -12,6 +12,9 @@ on:
         required: false
         type: string
         default: main
+      workflow_name:
+        required: false
+        type: string
     secrets:
       api_token:
         required: true
@@ -92,4 +95,5 @@ jobs:
       CHAINLOOP_VERSION: ${{ inputs.chainloop_version }}
       CHAINLOOP_TOKEN: ${{ secrets.api_token }}
       CHAINLOOP_CONTRACT_REVISION: ${{ inputs.contract_revision }}
+      CHAINLOOP_WORKFLOW_NAME: ${{ inputs.workflow_name }}
       
