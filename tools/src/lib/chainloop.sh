@@ -161,6 +161,8 @@ chainloop_summary() {
     digest=$(cat c8-push.txt | grep " Digest: " | awk -F'sha256:'  '{print $2}')
     echo "**[Chainloop Trust Report]( https://app.chainloop.dev/attestation/sha256:${digest} )**" >>$tmpfile
     echo "\`\`\`" >>$tmpfile
+  fi
+  if [ -f c8-status.txt ]; then
     cat c8-status.txt >>$tmpfile
     echo "\`\`\`" >>$tmpfile
   fi
