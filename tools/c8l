@@ -904,10 +904,10 @@ chainloop_summary() {
       return 1
     fi
     echo "**[Chainloop Trust Report]( https://app.chainloop.dev/attestation/${digest} )**" >> "$tmpfile"
+  fi
+  if [ -f c8-status.txt ] ; then
     echo "\`\`\`" >> "$tmpfile"
-    if [ -f c8-status.txt ] ; then
-      cat c8-status.txt >> "$tmpfile"
-    fi
+    cat c8-status.txt >> "$tmpfile"
     echo "\`\`\`" >> "$tmpfile"
   fi
   cat "$tmpfile"
