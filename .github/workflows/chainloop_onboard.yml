@@ -36,7 +36,8 @@ jobs:
         run: |
           workflow_name=${{ inputs.workflow_name }}
           if [[ "$workflow_name" = "" ]]; then
-            workflow_name=$(basename "$PARENT_WORKFLOW" | sed "s/\..*$//g")
+            # Extract the parent workflow name and convert to lowercase with hyphens
+            workflow_name=$(basename "$PARENT_WORKFLOW" | sed 's/\..*$//g; s/[[:space:]]/-/g; s/_/-/g' | tr '[:upper:]' '[:lower:]')
           fi
           echo "workflow_name=$workflow_name" >> $GITHUB_OUTPUT
 
