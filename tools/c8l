@@ -13,11 +13,11 @@ version_command() {
 
 c8l_usage() {
   if [[ -n $long_usage ]]; then
-    printf "c8l - [EXPERIMENTAL] Chainloop (c8) Labs CLI\n"
+    printf "c8l - [EXPERIMENTAL] (c8l) Chainloop Labs CLI\n"
     echo
 
   else
-    printf "c8l - [EXPERIMENTAL] Chainloop (c8) Labs CLI\n"
+    printf "c8l - [EXPERIMENTAL] (c8l) Chainloop Labs CLI\n"
     echo
 
   fi
@@ -32,6 +32,7 @@ c8l_usage() {
   printf "  %s   Show help about a command\n" "help   "
   printf "  %s   [i] Inspect.\n" "inspect"
   printf "  %s   Show the content of c8l script ready for sourcing.\n" "source "
+  printf "  %s   Run a command in the c8l environment.\n" "cmd    "
   printf "  %s   Chainloop CLI UX improved\n" "cli    "
   echo
 
@@ -127,6 +128,41 @@ c8l_source_usage() {
 
     printf "  %s\n" "--help, -h"
     printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+c8l_cmd_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "c8l cmd - Run a command in the c8l environment.\n"
+    echo
+
+  else
+    printf "c8l cmd - Run a command in the c8l environment.\n"
+    echo
+
+  fi
+
+  printf "Alias: r\n"
+  echo
+
+  printf "%s\n" "Usage:"
+  printf "  c8l cmd COMMAND\n"
+  printf "  c8l cmd --help | -h\n"
+  echo
+
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "Options:"
+
+    printf "  %s\n" "--help, -h"
+    printf "    Show this help\n"
+    echo
+
+    printf "%s\n" "Arguments:"
+
+    printf "  %s\n" "COMMAND"
+    printf "    Command to run in the c8l environment.\n"
     echo
 
   fi
@@ -560,7 +596,7 @@ normalize_input() {
   done
 }
 
-export CHAINLOOP_BIN_PATH="${CHAINLOOP_BIN_PATH:-/usr/local/bin/chainloop}"
+export CHAINLOOP_BIN_PATH="${CHAINLOOP_BIN_PATH:-/usr/local/bin/chainloop_bin}"
 
 is_chainloop_in_path() {
   if command -v chainloop &>/dev/null; then
@@ -605,11 +641,11 @@ prepare_tmp_file() {
   file_name=$1
   mkdir -p "${tmp_dir}"
   t="${tmp_dir}/${file_name}"
-  if [ -f $t ]; then
+  if [ -f "$t" ]; then
     echo "Temporary file file $t already exists"
     return 1
   fi
-  echo $t
+  echo "$t"
 }
 
 # chainloop_bin_cache_in_dir - it takes a path and copy there the CHAINLOOP_BIN_PATH
@@ -632,6 +668,7 @@ chainloop_recreate_env_from_file() {
   file=$(basename $path)
   if [[ $file =~ ^\.env_.*$ ]]; then
     export $(echo $file | sed 's/\.env_//')=$(cat $path)
+    echo export $(echo $file | sed 's/\.env_//')=$(cat $path)
   else
     log_error "File $file is not in the format .env_NAME"
     return 1
@@ -761,6 +798,7 @@ generic_install() {
   mkdir -p $CHAINLOOP_BIN_PATH
   log "Installing $file"
   curl -sfL $url -o $file_path
+
   if [ $? -ne 0 ]; then
     log_error "$file installation failed"
     return 1
@@ -820,25 +858,32 @@ chainloop_attestation_push() {
     export COSIGN_PASSWORD="$CHAINLOOP_SIGNING_PASSWORD"
     cosign generate-key-pair
   fi
-  if [ -z "${CHAINLOOP_SIGNING_KEY_PATH+x}" ]; then
+  if [ -n "${CHAINLOOP_SIGNING_KEY}" ]; then
     log "  with CHAINLOOP_SIGNING_KEY"
     tmp_key="${CHAINLOOP_TMP_DIR}/key"
     mkdir -p "${CHAINLOOP_TMP_DIR}"
-    echo "${CHAINLOOP_SIGNING_KEY}" >$tmp_key
-  else
+    echo "${CHAINLOOP_SIGNING_KEY}" > "$tmp_key"
+  fi
+  if [ -n "${CHAINLOOP_SIGNING_KEY_PATH}" ]; then
     log "  with CHAINLOOP_SIGNING_KEY_PATH"
     tmp_key="${CHAINLOOP_SIGNING_KEY_PATH}"
   fi
+
+  tmp_key_value=""
+  if [ -n "$tmp_key" ]; then
+    tmp_key_value="--key $tmp_key"
+  fi
+
   # chainloop attestation push --key env://CHAINLOOP_SIGNING_KEY
-  if chainloop attestation push --key $tmp_key --remote-state --attestation-id "${CHAINLOOP_ATTESTATION_ID}" &>c8-push.txt; then
+  if chainloop attestation push "$tmp_key_value" --output json --remote-state --attestation-id "${CHAINLOOP_ATTESTATION_ID}" > c8-push.txt; then
     log "Attestation Process Completed Successfully"
     cat c8-push.txt
-    rm $tmp_key
+    rm -f "$tmp_key"
   else
     exit_code=$?
     log_error "Attestation Process Failed"
     cat c8-push.txt
-    rm $tmp_key
+    rm -f "$tmp_key"
     return $exit_code
   fi
 }
@@ -849,20 +894,24 @@ chainloop_summary() {
     log $tmpfile
     return 1
   fi
-  echo -e "## Great job!\n\nYou are making SecOps and Compliance teams really happy. Keep up the good work!\n" >>$tmpfile
+  echo -e "## Great job!\n\nYou are making SecOps and Compliance teams really happy. Keep up the good work!\n" >> $tmpfile
 
   digest=""
   if [ -f c8-push.txt ]; then
-    digest=$(cat c8-push.txt | grep " Digest: " | awk -F'sha256:'  '{print $2}')
-    echo "**[Chainloop Trust Report]( https://app.chainloop.dev/attestation/sha256:${digest} )**" >>$tmpfile
-    echo "\`\`\`" >>$tmpfile
+    digest=$(cat c8-push.txt | jq -r '.digest')
+    if [ $? -ne 0 ]; then
+      log_error "Failed to get digest from c8-push.txt"
+      return 1
+    fi
+    echo "**[Chainloop Trust Report]( https://app.chainloop.dev/attestation/${digest} )**" >> "$tmpfile"
+    echo "\`\`\`" >> "$tmpfile"
+    if [ -f c8-status.txt ] ; then
+      cat c8-status.txt >> "$tmpfile"
+    fi
+    echo "\`\`\`" >> "$tmpfile"
   fi
-  if [ -f c8-status.txt ]; then
-    cat c8-status.txt >>$tmpfile
-    echo "\`\`\`" >>$tmpfile
-  fi
-  cat $tmpfile
-  rm $tmpfile
+  cat "$tmpfile"
+  rm "$tmpfile"
 }
 
 chainloop_summary_on_failure() {
@@ -1076,6 +1125,11 @@ c8l_source_command() {
 
 }
 
+c8l_cmd_command() {
+  eval "${args['command']}"
+
+}
+
 c8l_cli_install_tools_command() {
   validate_env
   install_chainloop_tools
@@ -1272,6 +1326,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    cmd | r)
+      action="cmd"
+      shift
+      c8l_cmd_parse_requirements "$@"
+      shift $#
+      ;;
+
     cli | c)
       action="cli"
       shift
@@ -1429,6 +1490,56 @@ c8l_source_parse_requirements() {
 
     esac
   done
+
+}
+
+c8l_cmd_parse_requirements() {
+
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        c8l_cmd_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  action="cmd"
+
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+
+        if [[ -z ${args['command']+x} ]]; then
+          args['command']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  if [[ -z ${args['command']+x} ]]; then
+    printf "missing required argument: COMMAND\nusage: c8l cmd COMMAND\n" >&2
+    exit 1
+  fi
 
 }
 
@@ -2044,6 +2155,7 @@ run() {
     "help") c8l_help_command ;;
     "inspect") c8l_inspect_command ;;
     "source") c8l_source_command ;;
+    "cmd") c8l_cmd_command ;;
     "cli") c8l_cli_command ;;
     "cli install-tools") c8l_cli_install_tools_command ;;
     "cli attestation-add-from-yaml") c8l_cli_attestation_add_from_yaml_command ;;

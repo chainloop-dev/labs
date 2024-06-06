@@ -1,4 +1,6 @@
 VERSION=$(shell git describe --tags --always)
+# CHAINLOOP_TOKEN is required for testing and should be places in .env file
+DOCKER_TEST_CMD=docker run --rm -it -w /code -v "${PWD}:/code" --env-file .env $(DOCKER_IMG) ./test/run.sh
 
 .PHONY: build
 # build
@@ -10,19 +12,14 @@ build:
 test:
 	./test/bats/bin/bats --print-output-on-failure test 
 
-docker_test_on_ubuntu:
-	docker run --rm -it -w /code -v "${PWD}:/code" node ./test/bats/bin/bats --print-output-on-failure test 
-
-docker_test_on_alpine:
-	docker run --rm -it -w /code -v "${PWD}:/code" chainguard/bash "./test/bats/bin/bats --print-output-on-failure test"
-
-docker_test_on_ubi:
-	docker run --rm -it -w /code -v "${PWD}:/code" redhat/ubi9 ./test/bats/bin/bats --print-output-on-failure test
-
-docker_test: docker_test_on_ubuntu
-
-docker_test_all: docker_test_on_ubuntu docker_test_on_alpine docker_test_on_ubi
-
+docker_test_on_ubuntu: DOCKER_IMG=node
+docker_test_on_alpine: DOCKER_IMG=chainguard/bash
+docker_test_on_ubi: DOCKER_IMG=redhat/ubi9
+docker_test_on_ubuntu docker_test_on_alpine docker_test_on_ubi:
+	@echo "\n\n### $@: Testing on $(DOCKER_IMG)"
+	$(DOCKER_TEST_CMD)
+docker_test: build docker_test_on_ubuntu
+docker_test_all: build docker_test_on_ubuntu docker_test_on_alpine docker_test_on_ubi
 docker_test_shell:
 	docker run --rm -it -w /code -v "${PWD}:/code" node bash 
 

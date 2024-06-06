@@ -64,6 +64,7 @@ generic_install() {
   mkdir -p $CHAINLOOP_BIN_PATH
   log "Installing $file"
   curl -sfL $url -o $file_path
+
   if [ $? -ne 0 ]; then
     log_error "$file installation failed"
     return 1
@@ -125,25 +126,32 @@ chainloop_attestation_push() {
     export COSIGN_PASSWORD="$CHAINLOOP_SIGNING_PASSWORD"
     cosign generate-key-pair
   fi
-  if [ -z "${CHAINLOOP_SIGNING_KEY_PATH+x}" ]; then
+  if [ -n "${CHAINLOOP_SIGNING_KEY}" ]; then
     log "  with CHAINLOOP_SIGNING_KEY"
     tmp_key="${CHAINLOOP_TMP_DIR}/key"
     mkdir -p "${CHAINLOOP_TMP_DIR}"
-    echo "${CHAINLOOP_SIGNING_KEY}" >$tmp_key
-  else
+    echo "${CHAINLOOP_SIGNING_KEY}" > "$tmp_key"
+  fi
+  if [ -n "${CHAINLOOP_SIGNING_KEY_PATH}" ]; then
     log "  with CHAINLOOP_SIGNING_KEY_PATH"
     tmp_key="${CHAINLOOP_SIGNING_KEY_PATH}"
   fi
+
+  tmp_key_value=""
+  if [ -n "$tmp_key" ]; then
+    tmp_key_value="--key $tmp_key"
+  fi
+
   # chainloop attestation push --key env://CHAINLOOP_SIGNING_KEY
-  if chainloop attestation push --key $tmp_key --remote-state --attestation-id "${CHAINLOOP_ATTESTATION_ID}" &>c8-push.txt; then
+  if chainloop attestation push "$tmp_key_value" --output json --remote-state --attestation-id "${CHAINLOOP_ATTESTATION_ID}" > c8-push.txt; then
     log "Attestation Process Completed Successfully"
     cat c8-push.txt
-    rm $tmp_key
+    rm -f "$tmp_key"
   else
     exit_code=$?
     log_error "Attestation Process Failed"
     cat c8-push.txt
-    rm $tmp_key
+    rm -f "$tmp_key"
     return $exit_code
   fi
 }
@@ -154,20 +162,24 @@ chainloop_summary() {
     log $tmpfile
     return 1
   fi
-  echo -e "## Great job!\n\nYou are making SecOps and Compliance teams really happy. Keep up the good work!\n" >>$tmpfile
+  echo -e "## Great job!\n\nYou are making SecOps and Compliance teams really happy. Keep up the good work!\n" >> $tmpfile
 
   digest=""
   if [ -f c8-push.txt ]; then
-    digest=$(cat c8-push.txt | grep " Digest: " | awk -F'sha256:'  '{print $2}')
-    echo "**[Chainloop Trust Report]( https://app.chainloop.dev/attestation/sha256:${digest} )**" >>$tmpfile
-    echo "\`\`\`" >>$tmpfile
+    digest=$(cat c8-push.txt | jq -r '.digest')
+    if [ $? -ne 0 ]; then
+      log_error "Failed to get digest from c8-push.txt"
+      return 1
+    fi
+    echo "**[Chainloop Trust Report]( https://app.chainloop.dev/attestation/${digest} )**" >> "$tmpfile"
+    echo "\`\`\`" >> "$tmpfile"
+    if [ -f c8-status.txt ] ; then
+      cat c8-status.txt >> "$tmpfile"
+    fi
+    echo "\`\`\`" >> "$tmpfile"
   fi
-  if [ -f c8-status.txt ]; then
-    cat c8-status.txt >>$tmpfile
-    echo "\`\`\`" >>$tmpfile
-  fi
-  cat $tmpfile
-  rm $tmpfile
+  cat "$tmpfile"
+  rm "$tmpfile"
 }
 
 chainloop_summary_on_failure() {
