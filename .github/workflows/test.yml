@@ -28,6 +28,8 @@ jobs:
 
       - name: ${{ matrix.key }}
         run: make -C tools ${{ matrix.key }}
+    env:
+      CHAINLOOP_TOKEN: ${{ secrets.CHAINLOOP_TOKEN }}
   
   test_build:
     name: Test if script generation works
