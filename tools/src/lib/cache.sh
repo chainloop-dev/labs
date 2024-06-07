@@ -19,6 +19,7 @@ chainloop_recreate_env_from_file() {
   file=$(basename $path)
   if [[ $file =~ ^\.env_.*$ ]]; then
     export $(echo $file | sed 's/\.env_//')=$(cat $path)
+    echo export $(echo $file | sed 's/\.env_//')=$(cat $path)
   else
     log_error "File $file is not in the format .env_NAME"
     return 1

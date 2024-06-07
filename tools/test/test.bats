@@ -1,5 +1,4 @@
 # setup_file() {
-# 
 # }
 
 setup() {
@@ -8,7 +7,8 @@ setup() {
     load 'test_helper/bats-file/load'
 
     DIR="$( cd "$( dirname "${BATS_TEST_FILENAME}" )/.." >/dev/null 2>&1 && pwd )"
-    PATH="$DIR/:$PATH" 
+    export PATH="$DIR/:$PATH:/usr/local/bin/chainloop_bin"
+    export DO_NOT_TRACK=1
 }
 
 @test "can run c8l script" {
@@ -28,7 +28,7 @@ setup() {
 }
 
 @test "can detect when chainloop is NOT in PATH" {
-    run bash -c "source <(./c8l source) > /dev/null; is_chainloop_in_path"
+    run bash -c "c8l r is_chainloop_in_path"
     assert_output --regexp ".*chainloop is not in PATH.*"
     # assert_line --index 0 --regexp ".*chainloop is not in PATH.*"
 }
@@ -38,8 +38,11 @@ setup() {
     assert_success
 }
 
+
 ###
 ### Integration tests
+###
+
 # TODO: move to integration tests
 @test "can run c8l_install.sh" {
    cd /tmp
@@ -54,5 +57,40 @@ setup() {
 
 @test "can detect chainloop in PATH" {
     run bash -c "source <(./c8l source); is_chainloop_in_path"
+    assert_success
+}
+
+# Abats test_tags=bats:focus
+@test "full attestation flow" {
+    export CHAINLOOP_WORKFLOW_NAME="chainloop-labs-tests"
+    cp ./c8l /tmp
+    cd /tmp
+    mkdir -p .c8l_cache
+
+    c8l r "chainloop_install yq jq cosign chainloop_cli "
+    c8l r "chainloop_attestation_init ; chainloop_save_env_to_cache .c8l_cache CHAINLOOP_ATTESTATION_ID"
+
+    echo -e "chainloop-labs-tests:\n  - path: ./c8l" > .chainloop.yml
+    # yq -p yaml -o json .chainloop.yml > .chainloop.json
+
+    source <(c8l r 'chainloop_restore_env_all_from_cache .c8l_cache | grep export')
+    # chainloop_attestation_add_from_yaml demo
+    chainloop attestation add --value ./c8l --kind ARTIFACT --remote-state --attestation-id ${CHAINLOOP_ATTESTATION_ID}
+
+    c8l r chainloop_attestation_status
+    run c8l r chainloop_attestation_push
+    assert_success
+
+    digest=$(cat c8-push.txt | jq -r '.digest')
+    run bash -c "c8l r chainloop_summary"
+    assert_output --regexp ".*attestation\/${digest}.*"
+
+    ###
+    # use key pair
+    c8l r "chainloop_attestation_init ; chainloop_save_env_to_cache .c8l_cache CHAINLOOP_ATTESTATION_ID"
+    source <(c8l r 'chainloop_restore_env_all_from_cache .c8l_cache | grep export')
+    chainloop attestation add --value ./c8l --kind ARTIFACT --remote-state --attestation-id ${CHAINLOOP_ATTESTATION_ID}
+    CHAINLOOP_USE_INSECURE_KEY=true
+    run bash -c "c8l r chainloop_attestation_push"
     assert_success
 }

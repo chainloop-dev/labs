@@ -1,4 +1,4 @@
-export CHAINLOOP_BIN_PATH="${CHAINLOOP_BIN_PATH:-/usr/local/bin/chainloop}"
+export CHAINLOOP_BIN_PATH="${CHAINLOOP_BIN_PATH:-/usr/local/bin/chainloop_bin}"
 
 is_chainloop_in_path() {
   if command -v chainloop &>/dev/null; then
@@ -43,9 +43,9 @@ prepare_tmp_file() {
   file_name=$1
   mkdir -p "${tmp_dir}"
   t="${tmp_dir}/${file_name}"
-  if [ -f $t ]; then
+  if [ -f "$t" ]; then
     echo "Temporary file file $t already exists"
     return 1
   fi
-  echo $t
+  echo "$t"
 }

@@ -1,5 +1,5 @@
 name: c8l
-help: "[EXPERIMENTAL] Chainloop (c8) Labs CLI"
+help: "[EXPERIMENTAL] (c8l) Chainloop Labs CLI"
 version: 0.3.0
 
 commands:
@@ -13,6 +13,14 @@ commands:
 
   - name: source
     help: "Show the content of c8l script ready for sourcing."
+
+  - name: cmd
+    help: "Run a command in the c8l environment."
+    alias: r
+    args:
+      - name: command
+        required: true
+        help: Command to run in the c8l environment.
 
   - name: cli
     alias: c
