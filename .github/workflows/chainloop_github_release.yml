@@ -10,9 +10,18 @@ on:
       project:
         description: "The project this workflow belongs to. default: repository name"
         type: string
-      workflow_name:
-        description: "The workflow name. default: parent workflow filename"
+      name:
+        description: "The workflow name"
         type: string
+        required: true
+      tag:
+        description: "The tag of the release"
+        type: string
+        required: true
+      skip_release_notes:
+        description: "Skip updating the release notes with the attestation link. contents:write permission is required to update the release notes"
+        type: boolean
+        default: false
       additional_materials:
         description: "Additional materials to be attested. Commas separated list of values"
         type: string
@@ -30,11 +39,10 @@ on:
 jobs:
   onboard_workflow:
     name: Onboard Chainloop Workflow
-    uses: chainloop-dev/labs/.github/workflows/chainloop_onboard.yml@4173e015dbd5dc2a8802555c268da63d57bbe576
-    if: github.event_name == 'release' && github.event.action == 'published'
+    uses: chainloop-dev/labs/.github/workflows/chainloop_onboard.yml@3a33712458701d687c9f78ff62a4d09b3726f4c4
     with:
       project: ${{ inputs.workflow_project }}
-      workflow_name: ${{ inputs.workflow_name }}
+      workflow_name: ${{ inputs.name }}
     # Pass parent workflow secrets to the child workflow
     secrets: inherit
 
@@ -42,8 +50,6 @@ jobs:
     name: Record release from GitHub
     runs-on: ubuntu-latest
     needs: onboard_workflow
-    # Only run this job when a release is published
-    if: github.event_name == 'release' && github.event.action == 'published'
     env:
       CHAINLOOP_WORKFLOW_NAME: ${{ needs.onboard_workflow.outputs.workflow_name }}
       CHAINLOOP_TOKEN: ${{ secrets.api_token }}
@@ -51,6 +57,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Check if there is release for the tag
+        run: |
+          if ! gh release view ${{inputs.tag}}; then
+            echo "Release ${{inputs.tag}} does not exist. Exiting..."
+            exit 1
+          fi
 
       - name: Install Chainloop
         run: |
@@ -64,14 +77,14 @@ jobs:
         run: |
           # gh release download raises an error if there are not assets on the release
           # that makes the workflow fail, so we use `|| true` to avoid that
-          gh release download ${{github.ref_name}} -D /tmp/github-release || true
+          gh release download ${{inputs.tag}} -D /tmp/github-release || true
           
           for entry in $(ls /tmp/github-release); do
             chainloop attestation add --value "/tmp/github-release/$entry"
           done
 
           # Include source code
-          gh release download ${{github.ref_name}} -A tar.gz -O /tmp/github-release/source-code.tar.gz
+          gh release download ${{inputs.tag}} -A tar.gz -O /tmp/github-release/source-code.tar.gz
           chainloop attestation add --value "/tmp/github-release/source-code.tar.gz"
 
           # Add additional materials if provided
@@ -105,8 +118,13 @@ jobs:
       - name: Add attestation link to release notes
         if: ${{ success() }}
         run: |
+          if [[ "${{ inputs.skip_release_notes }}" == "true" ]]; then
+            echo "Skipping updating the release notes with the attestation link"
+            exit 0
+          fi
+
           chainloop_release_url="## Chainloop Attestation"$'\n'"[View the attestation of this release](https://app.chainloop.dev/attestation/${{ steps.attestation-push.outputs.attestation_sha }})"
-          current_notes=$(gh release view ${{github.ref_name}} --json body -q '.body')
+          current_notes=$(gh release view ${{inputs.tag}} --json body -q '.body')
 
           if echo "$current_notes" | grep -q "## Chainloop Attestation"; then
             # Replace the existing Chainloop Attestation section with the new URL
@@ -117,4 +135,4 @@ jobs:
           fi
 
           # Try to update the release notes with the attestation link. If we don't have enough permissions, we skip it
-          gh release edit ${{github.ref_name}} -n "$modified_notes" || echo -n "No enough permissions to update the release notes. Skipping..."
+          gh release edit ${{inputs.tag}} -n "$modified_notes" || echo -n "No enough permissions to update the release notes. Skipping..."
