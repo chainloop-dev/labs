@@ -19,9 +19,9 @@ on:
       api_token:
         required: true
       signing_key:
-        required: true
+        required: false
       signing_key_password:
-        required: true
+        required: false
     
 jobs:
   chainloop-attestation:
