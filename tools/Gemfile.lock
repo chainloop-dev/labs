@@ -29,7 +29,7 @@ GEM
       tty-color (~> 0.5)
     psych (5.1.2)
       stringio
-    rexml (3.3.1)
+    rexml (3.3.2)
       strscan
     rouge (4.3.0)
     stringio (3.1.1)
