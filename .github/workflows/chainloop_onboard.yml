@@ -50,4 +50,4 @@ jobs:
           if [[ "$project" = "" ]]; then
             project=$(echo -n ${{github.repositoryUrl}} | rev | cut -d'/' -f1 | rev | sed 's/.git$//g')
           fi
-          chainloop --token ${{ secrets.api_token }} wf create --name "$WORKFLOW_NAME" --project "$project" >&2 || echo -n "Workflow already exists"
+          chainloop --token ${{ secrets.api_token }} wf create --name "$WORKFLOW_NAME" --project "$project" --skip-if-exists
