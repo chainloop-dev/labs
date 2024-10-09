@@ -30,10 +30,10 @@ on:
 jobs:
   onboard_workflow:
     name: Onboard Chainloop Workflow
-    uses: chainloop-dev/labs/.github/workflows/chainloop_onboard.yml@4173e015dbd5dc2a8802555c268da63d57bbe576
+    uses: chainloop-dev/labs/.github/workflows/chainloop_onboard.yml@main
     if: github.event_name == 'release' && github.event.action == 'published'
     with:
-      project: ${{ inputs.workflow_project }}
+      project: ${{ inputs.project }}
       workflow_name: ${{ inputs.workflow_name }}
     # Pass parent workflow secrets to the child workflow
     secrets: inherit
@@ -46,6 +46,7 @@ jobs:
     if: github.event_name == 'release' && github.event.action == 'published'
     env:
       CHAINLOOP_WORKFLOW_NAME: ${{ needs.onboard_workflow.outputs.workflow_name }}
+      CHAINLOOP_PROJECT_NAME: ${{ needs.onboard_workflow.outputs.project_name }}
       CHAINLOOP_TOKEN: ${{ secrets.api_token }}
       GH_TOKEN: ${{ github.token }}
 
@@ -58,14 +59,14 @@ jobs:
 
       - name: Initialize Attestation
         run: |
-          chainloop attestation init --workflow-name ${CHAINLOOP_WORKFLOW_NAME}
+          chainloop attestation init --workflow-name ${CHAINLOOP_WORKFLOW_NAME} --project ${CHAINLOOP_PROJECT_NAME}
 
       - name: Attest all assets
         run: |
           # gh release download raises an error if there are not assets on the release
           # that makes the workflow fail, so we use `|| true` to avoid that
           gh release download ${{github.ref_name}} -D /tmp/github-release || true
-          
+
           for entry in $(ls /tmp/github-release); do
             chainloop attestation add --value "/tmp/github-release/$entry"
           done

@@ -18,6 +18,9 @@ on:
       workflow_name:
         required: false
         type: string
+      project_name:
+        required: false
+        type: string
     secrets:
       api_token:
         required: true
@@ -25,12 +28,12 @@ on:
         required: true
       signing_key_password:
         required: true
-    
+
 jobs:
   chainloop-attestation:
     name: Chainloop Attestation Process
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -69,12 +72,12 @@ jobs:
         run: |
           source <(/usr/local/bin/chainloop/c8l source)
           chainloop_attestation_add_from_yaml ${{ inputs.attestation_name }}
- 
+
       - name: Chainloop Attestation Status
         run: |
           source <(/usr/local/bin/chainloop/c8l source)
           chainloop_attestation_status
- 
+
       - name: Validate Collected Artifacts and Record Attestation
         if: ${{ success() }}
         run: |
@@ -83,7 +86,7 @@ jobs:
         env:
           CHAINLOOP_SIGNING_KEY: ${{ secrets.signing_key }}
           CHAINLOOP_SIGNING_PASSWORD: ${{ secrets.signing_key_password }}
-  
+
       - name: Generate a summary report
         run: |
           source <(/usr/local/bin/chainloop/c8l source)
@@ -95,7 +98,7 @@ jobs:
           source <(/usr/local/bin/chainloop/c8l source)
           chainloop attestation reset
           chainloop_generate_github_summary_on_failure
-          
+
       - name: Mark attestation as cancelled
         if: ${{ cancelled() }}
         run: |
@@ -106,3 +109,4 @@ jobs:
       CHAINLOOP_TOKEN: ${{ secrets.api_token }}
       CHAINLOOP_CONTRACT_REVISION: ${{ inputs.contract_revision }}
       CHAINLOOP_WORKFLOW_NAME: ${{ inputs.workflow_name }}
+      CHAINLOOP_PROJECT_NAME: ${{ inputs.project_name }}
