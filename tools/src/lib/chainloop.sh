@@ -93,9 +93,13 @@ chainloop_attestation_init() {
   fi
   WF_NAME_VALUE=""
   if [ -n "${CHAINLOOP_WORKFLOW_NAME}" ]; then
-    WF_NAME_VALUE="--workflow-name ${CHAINLOOP_WORKFLOW_NAME}"
+    WF_NAME_VALUE="--workflow ${CHAINLOOP_WORKFLOW_NAME}"
   fi
-  r=$(chainloop attestation init -f --remote-state --output json $CR_VALUE $WF_NAME_VALUE)
+  PROJECT_NAME_VALUE=""
+  if [ -n "${CHAINLOOP_PROJECT_NAME}" ]; then
+    PROJECT_NAME_VALUE="--project ${CHAINLOOP_PROJECT_NAME}"
+  fi
+  r=$(chainloop attestation init -f --remote-state --output json $CR_VALUE $WF_NAME_VALUE $PROJECT_NAME_VALUE)
   if [ $? -ne 0 ]; then
     log_error "Chainloop initialization failed: $r"
     return 1

@@ -15,6 +15,9 @@ on:
       workflow_name:
         description: The discovered or created Chainloop workflow
         value: ${{ jobs.chainloop_onboard.outputs.workflow_name }}
+      project_name:
+        description: The discovered or created Chainloop project name
+        value: ${{ jobs.chainloop_onboard.outputs.project_name }}
 
 jobs:
   chainloop_onboard:
@@ -22,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       workflow_name: ${{ steps.set_workflow_name.outputs.workflow_name }}
+      project_name: ${{ steps.set_workflow_name.outputs.project_name }}
 
     steps:
       - name: Install Chainloop
@@ -40,14 +44,16 @@ jobs:
             workflow_name=$(basename "$PARENT_WORKFLOW" | sed 's/\..*$//g; s/[[:space:]]/-/g; s/_/-/g' | tr '[:upper:]' '[:lower:]')
           fi
           echo "workflow_name=$workflow_name" >> $GITHUB_OUTPUT
-
-      - name: Discover and create workflow
-        env:
-          WORKFLOW_NAME: ${{ steps.set_workflow_name.outputs.workflow_name }}
-        run: |
-          echo "Creating '$WORKFLOW_NAME' chainloop workflow"
           project=${{ inputs.project }}
           if [[ "$project" = "" ]]; then
             project=$(echo -n ${{github.repositoryUrl}} | rev | cut -d'/' -f1 | rev | sed 's/.git$//g')
           fi
-          chainloop --token ${{ secrets.api_token }} wf create --name "$WORKFLOW_NAME" --project "$project" --skip-if-exists
+          echo "project_name=$project" >> $GITHUB_OUTPUT
+
+      - name: Discover and create workflow
+        env:
+          WORKFLOW_NAME: ${{ steps.set_workflow_name.outputs.workflow_name }}
+          PROJECT_NAME: ${{ steps.set_workflow_name.outputs.project_name }}
+        run: |
+          echo "Creating '$PROJECT_NAME' / '$WORKFLOW_NAME' workflow"
+          chainloop --token ${{ secrets.api_token }} wf create --name "$WORKFLOW_NAME" --project "$PROJECT_NAME" --skip-if-exists
