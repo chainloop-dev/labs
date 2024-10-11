@@ -22,7 +22,7 @@ on:
         required: false
       signing_key_password:
         required: false
-    
+
 jobs:
   chainloop-attestation:
     name: Chainloop Attestation Process
@@ -33,7 +33,7 @@ jobs:
         id: cache-chainloop
         with:
           path: .c8l_cache
-          key: c8l-cache-${{ runner.os }}-${{ github.run_id }} 
+          key: c8l-cache-${{ runner.os }}-${{ github.run_id }}
 
       - name: Restore Chainloop binaries from cache
         run: |
@@ -64,7 +64,7 @@ jobs:
         run: |
           source <(/usr/local/bin/chainloop/c8l source)
           chainloop_attestation_add_from_yaml ${{ inputs.attestation_name }}
- 
+
       - name: Validate Collected Artifacts and Record Attestation
         if: ${{ success() }}
         run: |
@@ -73,7 +73,7 @@ jobs:
         env:
           CHAINLOOP_SIGNING_KEY: ${{ secrets.signing_key }}
           CHAINLOOP_SIGNING_PASSWORD: ${{ secrets.signing_key_password }}
-  
+
       - name: Generate a summary report
         run: |
           source <(/usr/local/bin/chainloop/c8l source)
@@ -85,7 +85,7 @@ jobs:
           source <(/usr/local/bin/chainloop/c8l source)
           chainloop attestation reset --remote-state --attestation-id ${CHAINLOOP_ATTESTATION_ID}
           chainloop_generate_github_summary_on_failure
-          
+
       - name: Mark attestation as cancelled
         if: ${{ cancelled() }}
         run: |
@@ -95,5 +95,5 @@ jobs:
       CHAINLOOP_VERSION: ${{ inputs.chainloop_version }}
       CHAINLOOP_TOKEN: ${{ secrets.api_token }}
       CHAINLOOP_CONTRACT_REVISION: ${{ inputs.contract_revision }}
+      # Not sure if this is being used.
       CHAINLOOP_WORKFLOW_NAME: ${{ inputs.workflow_name }}
-      

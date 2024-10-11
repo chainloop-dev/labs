@@ -674,7 +674,7 @@ chainloop_attestation_init() {
   fi
   WF_NAME_VALUE=""
   if [ -n "${CHAINLOOP_WORKFLOW_NAME}" ]; then
-    WF_NAME_VALUE="--workflow-name ${CHAINLOOP_WORKFLOW_NAME}"
+    WF_NAME_VALUE="--workflow ${CHAINLOOP_WORKFLOW_NAME}"
   fi
   PROJECT_NAME_VALUE=""
   if [ -n "${CHAINLOOP_PROJECT_NAME}" ]; then
