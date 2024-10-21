@@ -57,12 +57,12 @@ jobs:
 
       - name: Initialize Attestation
         run: |
-          source <(/usr/local/bin/chainloop/c8l source)
+          source <(/usr/local/bin/chainloop_bin/c8l source)
           chainloop_attestation_init
           echo "CHAINLOOP_ATTESTATION_ID=${CHAINLOOP_ATTESTATION_ID}" >> "$GITHUB_ENV"
 
       - name: logs
-        run: source <(/usr/local/bin/chainloop/c8l source) && chainloop_collect_logs_for_github_jobs
+        run: source <(/usr/local/bin/chainloop_bin/c8l source) && chainloop_collect_logs_for_github_jobs
         env:
           GH_TOKEN: ${{ github.token }}
 
@@ -70,18 +70,18 @@ jobs:
       # based on the configuration in .chainloop.yml
       - name: Add all artifacts, reports, and metadata to attestation.
         run: |
-          source <(/usr/local/bin/chainloop/c8l source)
+          source <(/usr/local/bin/chainloop_bin/c8l source)
           chainloop_attestation_add_from_yaml ${{ inputs.attestation_name }}
 
       - name: Chainloop Attestation Status
         run: |
-          source <(/usr/local/bin/chainloop/c8l source)
+          source <(/usr/local/bin/chainloop_bin/c8l source)
           chainloop_attestation_status
 
       - name: Validate Collected Artifacts and Record Attestation
         if: ${{ success() }}
         run: |
-          source <(/usr/local/bin/chainloop/c8l source)
+          source <(/usr/local/bin/chainloop_bin/c8l source)
           chainloop_attestation_push
         env:
           CHAINLOOP_SIGNING_KEY: ${{ secrets.signing_key }}
@@ -89,13 +89,13 @@ jobs:
 
       - name: Generate a summary report
         run: |
-          source <(/usr/local/bin/chainloop/c8l source)
+          source <(/usr/local/bin/chainloop_bin/c8l source)
           chainloop_generate_github_summary
 
       - name: Mark attestation as failed
         if: ${{ failure() }}
         run: |
-          source <(/usr/local/bin/chainloop/c8l source)
+          source <(/usr/local/bin/chainloop_bin/c8l source)
           chainloop attestation reset
           chainloop_generate_github_summary_on_failure
 

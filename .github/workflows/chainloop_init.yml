@@ -38,11 +38,11 @@ jobs:
       - name: Install Chainloop CLI, Labs and Cosign
         run: |
           curl -sfL https://raw.githubusercontent.com/chainloop-dev/labs/${{ inputs.chainloop_labs_branch }}/tools/install_c8l.sh | bash -s -- ${{ inputs.chainloop_labs_branch }} chainloop_cli cosign
-          source <(/usr/local/bin/chainloop/c8l source)
+          source <(/usr/local/bin/chainloop_bin/c8l source)
 
       - name: Initialize Attestation
         run: |
-          source <(/usr/local/bin/chainloop/c8l source)
+          source <(/usr/local/bin/chainloop_bin/c8l source)
           chainloop_attestation_init
           chainloop_save_env_to_cache .c8l_cache CHAINLOOP_ATTESTATION_ID
 
