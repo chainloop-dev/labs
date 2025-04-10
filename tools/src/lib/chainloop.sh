@@ -33,7 +33,7 @@ chainloop_bin_install() {
 install_chainloop_cli() {
   mkdir -p ${CHAINLOOP_TMP_DIR} $CHAINLOOP_BIN_PATH
   log "Installing Chainloop CLI"
-  url_chainloop_cli="https://gist.githubusercontent.com/javirln/01cfcb36f00668ad1af9e5c02acd1397/raw/f8a271180ed8e5a307fd6c6f2bfbf18c9f30b916/install.sh"
+  url_chainloop_cli="https://docs.chainloop.dev/install.sh"
   if [ -n "${CHAINLOOP_VERSION}" ]; then
     curl -sfL "${url_chainloop_cli}" | bash -s -- --version v${CHAINLOOP_VERSION} --path $CHAINLOOP_BIN_PATH
   else
