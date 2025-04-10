@@ -62,8 +62,8 @@ setup() {
 
 # Abats test_tags=bats:focus
 @test "full attestation flow" {
-    export CHAINLOOP_WORKFLOW_NAME="chainloop-labs-tests"
-    export CHAINLOOP_PROJECT_NAME="chainloop"
+    export CHAINLOOP_WORKFLOW_NAME="labs-tests"
+    export CHAINLOOP_PROJECT_NAME="labs"
     cp ./c8l /tmp
     cd /tmp
     mkdir -p .c8l_cache
