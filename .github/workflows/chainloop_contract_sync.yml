@@ -32,17 +32,10 @@ jobs:
         run: |
           for file in $(ls ${{ inputs.contract_root_folder }}); do
               if [[ $file = *.yml || $file = *.yaml ]]; then
-                  contract_name=$(basename $file | cut -d'.' -f1)
                   contract_file="${{ inputs.contract_root_folder }}/$file"
 
-                  echo "Checking if contract $contract_name exists..."
-                  if chainloop wf contract describe --name $contract_name >/dev/null 2>&1; then
-                      echo "Contract $contract_name exists, updating..."
-                      chainloop wf contract update --name $contract_name --contract $contract_file
-                  else
-                      echo "Contract $contract_name does not exist, creating..."
-                      chainloop wf contract create --name $contract_name --contract $contract_file
-                  fi
+                  echo "Applying contract from $contract_file..."
+                  chainloop wf contract apply --contract $contract_file
               fi
           done
 
